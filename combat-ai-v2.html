@@ -1277,35 +1277,74 @@
             return { x: sx / sw, y: sy / sw };
         }
 
-        // Convertit vitesse normalisee en m/s approximatif pour affichage
-        // Basé sur : distance bras ~0.6m, espace normalise epaule-poignet ~0.3
-        // Donc 1 unite norm ≈ 2m. A 30fps, vitesse_ms = speed_norm * 2 * fps
+        // Convertit vitesse normalisee en m/s approximatif pour affichage (v2.2 corrige)
+        // Calibration: distance bras ~0.6m correspond a ~0.3 en coordonnees normalisees
+        // Donc 1 unite norm ~= 2m en espace reel.
+        // La vitesse normalisee est calculee sur FRAME_GAP frames (3 frames d'ecart).
+        // Vitesse reelle = (distance_norm * SCALE_NORM_TO_M) / (FRAME_GAP / fps)
+        //                = normSpeed * SCALE * fps / FRAME_GAP
+        // Valeurs cibles: jab amateur ~5-8 m/s, pro ~10-15 m/s, impossible > 25 m/s
+        const NORM_TO_METERS = 2.0;    // 1 unite normalisee ~= 2 metres
+        const SPEED_FRAME_GAP = 3;     // On compare frame N vs frame N-3
+        const MAX_DISPLAY_SPEED = 25;  // Cap affichage a 25 m/s (au dela = irrealiste)
+
         function normSpeedToMs(normSpeed) {
-            return normSpeed * 2 * state.fps;
+            const fps = Math.max(state.fps, 15); // plancher fps pour eviter explosion
+            const speedMs = normSpeed * NORM_TO_METERS * fps / SPEED_FRAME_GAP;
+            return Math.min(speedMs, MAX_DISPLAY_SPEED);
         }
 
-        // ===== DETECTION POSTURE DEBOUT =====
+        // ===== DETECTION POSTURE DEBOUT (v2.2 - corrige faux positifs assis) =====
         function checkStanding(landmarks) {
-            // Compare position Y des hanches vs epaules
-            // Si les hanches sont trop hautes (proches de la tete) ou trop proches des epaules = assis
+            // v2.2: On utilise les GENOUX pour distinguer debout vs assis.
+            // Quand on est debout, les genoux sont BIEN EN DESSOUS des hanches.
+            // Quand on est assis, les genoux sont au meme niveau que les hanches (ou pas visibles).
             const leftHip = landmarks[23];
             const rightHip = landmarks[24];
             const leftShoulder = landmarks[11];
             const rightShoulder = landmarks[12];
+            const leftKnee = landmarks[25];
+            const rightKnee = landmarks[26];
             const nose = landmarks[0];
 
             const hipY = (leftHip.y + rightHip.y) / 2;
             const shoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+            const kneeY = (leftKnee.y + rightKnee.y) / 2;
             const noseY = nose.y;
 
-            // Distance torse (epaules -> hanches) en proportion du corps
+            // Distance torse (epaules -> hanches)
             const torsoLength = hipY - shoulderY;
             // Distance tete -> hanches
             const fullLength = hipY - noseY;
+            // Distance hanches -> genoux (CLE pour detecter debout vs assis)
+            const legLength = kneeY - hipY;
 
-            // Si torse < 15% de la hauteur totale visible OU hanches pas visibles en bas
-            // Alors probablement assis ou trop pres
-            const isStanding = torsoLength > STANDING_THRESHOLD && fullLength > 0.25;
+            // Visibility des genoux (MediaPipe donne un score de visibilite 0-1)
+            const kneeVisibility = Math.min(
+                leftKnee.visibility || 0,
+                rightKnee.visibility || 0
+            );
+
+            // CRITERES POUR ETRE DEBOUT :
+            // 1) Torse suffisamment long (epaules-hanches > 15%)
+            // 2) Corps assez visible (nez-hanches > 25%)
+            // 3) NOUVEAU: Genoux visibles ET bien en dessous des hanches
+            //    - legLength > 0.10 = les genoux sont au moins 10% plus bas que les hanches
+            //    - OU les genoux ne sont pas visibles (hors cadre = probablement debout et cadre serre)
+            //      mais SEULEMENT si le torse est vraiment long (> 0.25) pour eviter les faux positifs assis
+            const kneesVisible = kneeVisibility > 0.5;
+            const kneesBelow = legLength > 0.10;
+            const torsoCheck = torsoLength > STANDING_THRESHOLD && fullLength > 0.25;
+
+            let isStanding;
+            if (kneesVisible) {
+                // Genoux visibles : on verifie qu'ils sont bien en dessous des hanches
+                isStanding = torsoCheck && kneesBelow;
+            } else {
+                // Genoux pas visibles (cadre serre) : on demande un torse plus long
+                // pour eviter que quelqu'un assis avec les genoux hors cadre passe le check
+                isStanding = torsoLength > 0.25 && fullLength > 0.35;
+            }
 
             if (state.isStanding !== isStanding) {
                 state.isStanding = isStanding;
@@ -1313,7 +1352,7 @@
                     postureStatus.textContent = 'DEBOUT';
                     postureStatus.style.color = '#00ff88';
                 } else {
-                    postureStatus.textContent = 'ASSIS';
+                    postureStatus.textContent = 'LEVE-TOI';
                     postureStatus.style.color = '#ff4444';
                 }
             }
@@ -1539,10 +1578,11 @@
             }
         }
 
-        // ===== ENREGISTRER UN COUP (v2.1 scoring realiste) =====
+        // ===== ENREGISTRER UN COUP (v2.2 scoring realiste) =====
         function registerPunch(technique, extension, speedMs, now) {
             state.punchCount++;
-            state.lastPunchTime = now;
+            // NOTE: lastPunchTime est mis a jour APRES le check combo (plus bas)
+            // pour que timeSinceLastPunch soit correct
 
             const config = CONFIG[state.difficulty];
 
@@ -1586,9 +1626,24 @@
             else if (techKey === 'crochet') state.techniques.crochet++;
             else if (techKey === 'uppercut') state.techniques.uppercut++;
 
-            // Combo
-            state.combo++;
+            // Combo (v2.2 - avec cap et detection anomalie)
+            // Protection anti-faux-positifs: si les coups arrivent a un rythme inhumain
+            // (plus de 5 coups/seconde = 200ms entre chaque), c'est du bruit
+            const MAX_COMBO = 50;  // Cap realiste (un combo de 50 c'est deja enorme)
+            const MIN_PUNCH_INTERVAL = 200; // ms - impossible de frapper plus vite que 5/sec
+            const timeSinceLastPunch = now - state.lastPunchTime;
+
+            if (timeSinceLastPunch < MIN_PUNCH_INTERVAL && state.combo > 3) {
+                // Rythme suspect - probablement des faux positifs, on reset le combo
+                state.combo = 0;
+            } else {
+                state.combo++;
+                if (state.combo > MAX_COMBO) state.combo = MAX_COMBO;
+            }
             if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+
+            // Maintenant on met a jour lastPunchTime (apres le check combo)
+            state.lastPunchTime = now;
 
             clearTimeout(state.comboTimeout);
             state.comboTimeout = setTimeout(() => {
