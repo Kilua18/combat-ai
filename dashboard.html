@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combat.AI - Dashboard M&eacute;triques</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --green: #00ff88;
+            --blue: #00ccff;
+            --orange: #ff6600;
+            --red: #ff4444;
+            --dark: #0a0a0a;
+            --card: #111;
+            --border: rgba(255,255,255,0.08);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 20px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--green), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-title {
+            color: #888;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #333;
+            background: transparent;
+            color: #888;
+        }
+
+        .header-btn:hover { border-color: var(--green); color: var(--green); }
+
+        .header-btn-primary {
+            background: linear-gradient(135deg, var(--green), var(--blue));
+            color: #000;
+            border: none;
+        }
+
+        /* Layout */
+        .dashboard {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* KPI Row */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+        }
+
+        .kpi-card.green::before { background: var(--green); }
+        .kpi-card.blue::before { background: var(--blue); }
+        .kpi-card.orange::before { background: var(--orange); }
+        .kpi-card.red::before { background: var(--red); }
+
+        .kpi-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 32px;
+            font-weight: 900;
+        }
+
+        .kpi-value.green { color: var(--green); }
+        .kpi-value.blue { color: var(--blue); }
+        .kpi-value.orange { color: var(--orange); }
+        .kpi-value.red { color: var(--red); }
+
+        .kpi-change {
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .kpi-up { color: var(--green); }
+        .kpi-down { color: var(--red); }
+
+        /* Grid principal */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title span {
+            font-size: 12px;
+            color: #555;
+        }
+
+        /* Platform stats */
+        .platform-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .platform-row:last-child { border-bottom: none; }
+
+        .platform-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .platform-icon {
+            font-size: 24px;
+            width: 36px;
+            text-align: center;
+        }
+
+        .platform-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .platform-metric {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .platform-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        /* Bar chart simple (CSS) */
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 200px;
+            padding: 20px 0;
+        }
+
+        .chart-bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+        }
+
+        .chart-bar {
+            width: 100%;
+            max-width: 40px;
+            border-radius: 6px 6px 0 0;
+            transition: height 0.5s;
+            position: relative;
+        }
+
+        .chart-bar-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .chart-bar-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 11px;
+            color: #fff;
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+
+        /* Timeline / History */
+        .timeline {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timeline-item:last-child { border-bottom: none; }
+
+        .timeline-date {
+            font-size: 12px;
+            color: #555;
+            min-width: 120px;
+        }
+
+        .timeline-content {
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        /* Session import */
+        .import-zone {
+            border: 2px dashed #333;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .import-zone:hover {
+            border-color: var(--green);
+            background: rgba(0,255,136,0.03);
+        }
+
+        .import-zone p {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .import-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        /* Session list */
+        .session-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .session-row:last-child { border-bottom: none; }
+
+        .session-date {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .session-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .session-stat {
+            text-align: center;
+        }
+
+        .session-stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .session-stat-label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .dashboard { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo">COMBAT.AI</div>
+            <div class="header-title">Dashboard M&eacute;triques</div>
+        </div>
+        <div class="header-actions">
+            <button class="header-btn" onclick="exportDashboard()">Exporter CSV</button>
+            <label class="header-btn header-btn-primary" for="import-file">Importer session</label>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importSession(event)">
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <!-- KPI ROW -->
+        <div class="kpi-row">
+            <div class="kpi-card green">
+                <div class="kpi-label">Total sessions</div>
+                <div class="kpi-value green" id="kpi-sessions">0</div>
+            </div>
+            <div class="kpi-card blue">
+                <div class="kpi-label">Coups total</div>
+                <div class="kpi-value blue" id="kpi-punches">0</div>
+            </div>
+            <div class="kpi-card orange">
+                <div class="kpi-label">Score moyen</div>
+                <div class="kpi-value orange" id="kpi-avg-score">0</div>
+            </div>
+            <div class="kpi-card red">
+                <div class="kpi-label">Meilleur combo</div>
+                <div class="kpi-value red" id="kpi-max-combo">0</div>
+            </div>
+            <div class="kpi-card green">
+                <div class="kpi-label">Waitlist</div>
+                <div class="kpi-value green" id="kpi-waitlist">0</div>
+            </div>
+        </div>
+
+        <!-- SOCIAL + SESSIONS -->
+        <div class="grid-2">
+            <!-- Social Metrics -->
+            <div class="card">
+                <div class="card-title">
+                    R&eacute;seaux sociaux
+                    <span>Derni&egrave;re mise &agrave; jour</span>
+                </div>
+                <div id="social-metrics">
+                    <div class="platform-row">
+                        <div class="platform-info">
+                            <div class="platform-icon">&#x1F4F1;</div>
+                            <div>
+                                <div class="platform-name">Instagram</div>
+                                <div class="platform-metric">Vues / Likes</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="platform-value" id="ig-views">--</div>
+                        </div>
+                    </div>
+                    <div class="platform-row">
+                        <div class="platform-info">
+                            <div class="platform-icon">&#x1F426;</div>
+                            <div>
+                                <div class="platform-name">Twitter/X</div>
+                                <div class="platform-metric">Impressions</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="platform-value" id="tw-impressions">--</div>
+                        </div>
+                    </div>
+                    <div class="platform-row">
+                        <div class="platform-info">
+                            <div class="platform-icon">&#x1F534;</div>
+                            <div>
+                                <div class="platform-name">Reddit</div>
+                                <div class="platform-metric">Upvotes</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="platform-value" id="rd-upvotes">--</div>
+                        </div>
+                    </div>
+                    <div class="platform-row">
+                        <div class="platform-info">
+                            <div class="platform-icon">&#x1F4BC;</div>
+                            <div>
+                                <div class="platform-name">LinkedIn</div>
+                                <div class="platform-metric">Impressions</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="platform-value" id="li-impressions">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sessions -->
+            <div class="card">
+                <div class="card-title">
+                    Sessions d'entra&icirc;nement
+                    <span id="session-count">0 sessions</span>
+                </div>
+                <div id="sessions-list">
+                    <div class="import-zone" onclick="document.getElementById('import-file').click()">
+                        <div class="import-icon">&#x1F4E5;</div>
+                        <div style="font-weight:600; margin-bottom:5px;">Importer une session</div>
+                        <p>Glisse un fichier JSON export&eacute; depuis Combat.AI v2</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART + TECHNIQUES -->
+        <div class="grid-2">
+            <!-- Techniques chart -->
+            <div class="card">
+                <div class="card-title">R&eacute;partition des techniques</div>
+                <div class="chart-bars" id="technique-chart">
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar" id="bar-jab" style="height:0;background:var(--green);">
+                            <div class="chart-bar-value" id="val-jab">0</div>
+                        </div>
+                        <div class="chart-bar-label">JAB</div>
+                    </div>
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar" id="bar-cross" style="height:0;background:var(--blue);">
+                            <div class="chart-bar-value" id="val-cross">0</div>
+                        </div>
+                        <div class="chart-bar-label">CROSS</div>
+                    </div>
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar" id="bar-crochet" style="height:0;background:var(--orange);">
+                            <div class="chart-bar-value" id="val-crochet">0</div>
+                        </div>
+                        <div class="chart-bar-label">CROCHET</div>
+                    </div>
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar" id="bar-uppercut" style="height:0;background:var(--red);">
+                            <div class="chart-bar-value" id="val-uppercut">0</div>
+                        </div>
+                        <div class="chart-bar-label">UPPERCUT</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Score history -->
+            <div class="card">
+                <div class="card-title">Historique des scores</div>
+                <div class="chart-bars" id="score-chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== DATA STORE =====
+        let sessions = JSON.parse(localStorage.getItem('combatai_sessions') || '[]');
+        let socialData = null;
+
+        // ===== INIT =====
+        function init() {
+            loadSocialMetrics();
+            loadWaitlistCount();
+            renderAll();
+        }
+
+        // ===== SOCIAL METRICS (from metrics-log.json) =====
+        function loadSocialMetrics() {
+            // Try to load from metrics-log.json via fetch (local file)
+            fetch('metrics-log.json')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const latest = data[data.length - 1];
+                        socialData = latest;
+
+                        document.getElementById('ig-views').textContent =
+                            latest.instagram?.views || '--';
+                        document.getElementById('tw-impressions').textContent =
+                            latest.twitter?.impressions || '--';
+                        document.getElementById('rd-upvotes').textContent =
+                            latest.reddit?.upvotes || '--';
+                        document.getElementById('li-impressions').textContent =
+                            latest.linkedin?.impressions || '--';
+                    }
+                })
+                .catch(() => {
+                    console.log('metrics-log.json not found, using manual input');
+                });
+        }
+
+        function loadWaitlistCount() {
+            const signups = JSON.parse(localStorage.getItem('combatai_signups') || '[]');
+            document.getElementById('kpi-waitlist').textContent = signups.length;
+        }
+
+        // ===== IMPORT SESSION =====
+        function importSession(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.app && data.app.includes('Combat.AI')) {
+                        sessions.push(data);
+                        localStorage.setItem('combatai_sessions', JSON.stringify(sessions));
+                        renderAll();
+                    } else {
+                        alert('Fichier non reconnu. Utilise un export Combat.AI v2.');
+                    }
+                } catch (err) {
+                    alert('Erreur de lecture du fichier JSON.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // ===== RENDER =====
+        function renderAll() {
+            renderKPIs();
+            renderSessions();
+            renderTechniqueChart();
+            renderScoreChart();
+        }
+
+        function renderKPIs() {
+            const totalSessions = sessions.length;
+            const totalPunches = sessions.reduce((s, d) => s + (d.total_punches || 0), 0);
+            const avgScore = sessions.length > 0
+                ? Math.round(sessions.reduce((s, d) => s + (d.avg_score || 0), 0) / sessions.length)
+                : 0;
+            const maxCombo = sessions.reduce((m, d) => Math.max(m, d.max_combo || 0), 0);
+
+            document.getElementById('kpi-sessions').textContent = totalSessions;
+            document.getElementById('kpi-punches').textContent = totalPunches;
+            document.getElementById('kpi-avg-score').textContent = avgScore;
+            document.getElementById('kpi-max-combo').textContent = maxCombo;
+        }
+
+        function renderSessions() {
+            const container = document.getElementById('sessions-list');
+            const countEl = document.getElementById('session-count');
+            countEl.textContent = `${sessions.length} session${sessions.length > 1 ? 's' : ''}`;
+
+            if (sessions.length === 0) {
+                container.innerHTML = `
+                    <div class="import-zone" onclick="document.getElementById('import-file').click()">
+                        <div class="import-icon">&#x1F4E5;</div>
+                        <div style="font-weight:600; margin-bottom:5px;">Importer une session</div>
+                        <p>Glisse un fichier JSON export&eacute; depuis Combat.AI v2</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            sessions.slice().reverse().forEach((s, i) => {
+                const date = new Date(s.date).toLocaleDateString('fr-FR', {
+                    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                html += `
+                    <div class="session-row">
+                        <div class="session-date">${date}</div>
+                        <div class="session-stats">
+                            <div class="session-stat">
+                                <div class="session-stat-value">${s.total_punches || 0}</div>
+                                <div class="session-stat-label">Coups</div>
+                            </div>
+                            <div class="session-stat">
+                                <div class="session-stat-value">${s.avg_score || 0}</div>
+                                <div class="session-stat-label">Score</div>
+                            </div>
+                            <div class="session-stat">
+                                <div class="session-stat-value">${s.max_combo || 0}</div>
+                                <div class="session-stat-label">Combo</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                <div style="text-align:center; padding-top:15px;">
+                    <label for="import-file" style="color:var(--green); cursor:pointer; font-size:14px; font-weight:600;">
+                        + Importer une session
+                    </label>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function renderTechniqueChart() {
+            const totals = { jab: 0, cross: 0, crochet: 0, uppercut: 0 };
+
+            sessions.forEach(s => {
+                if (s.techniques) {
+                    totals.jab += s.techniques.jab || 0;
+                    totals.cross += s.techniques.cross || 0;
+                    totals.crochet += s.techniques.crochet || 0;
+                    totals.uppercut += s.techniques.uppercut || 0;
+                }
+            });
+
+            const max = Math.max(totals.jab, totals.cross, totals.crochet, totals.uppercut, 1);
+
+            ['jab', 'cross', 'crochet', 'uppercut'].forEach(tech => {
+                const bar = document.getElementById(`bar-${tech}`);
+                const val = document.getElementById(`val-${tech}`);
+                const h = (totals[tech] / max) * 160;
+                bar.style.height = `${Math.max(h, 5)}px`;
+                val.textContent = totals[tech];
+            });
+        }
+
+        function renderScoreChart() {
+            const container = document.getElementById('score-chart');
+            container.innerHTML = '';
+
+            if (sessions.length === 0) {
+                container.innerHTML = '<div style="color:#555;margin:auto;">Aucune session</div>';
+                return;
+            }
+
+            const maxScore = 100;
+
+            sessions.forEach((s, i) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'chart-bar-wrapper';
+
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                const h = ((s.avg_score || 0) / maxScore) * 160;
+                bar.style.height = `${Math.max(h, 5)}px`;
+
+                const score = s.avg_score || 0;
+                bar.style.background = score >= 75 ? 'var(--green)' : score >= 50 ? 'var(--orange)' : 'var(--red)';
+
+                const value = document.createElement('div');
+                value.className = 'chart-bar-value';
+                value.textContent = score;
+                bar.appendChild(value);
+
+                const label = document.createElement('div');
+                label.className = 'chart-bar-label';
+                label.textContent = `#${i + 1}`;
+
+                wrapper.appendChild(bar);
+                wrapper.appendChild(label);
+                container.appendChild(wrapper);
+            });
+        }
+
+        // ===== EXPORT CSV =====
+        function exportDashboard() {
+            if (sessions.length === 0) {
+                alert('Aucune session a exporter');
+                return;
+            }
+
+            let csv = 'Date,Rounds,Difficulte,Total Coups,Score Moyen,Max Combo,Meilleure Vitesse,Defenses,Jab,Cross,Crochet,Uppercut\n';
+
+            sessions.forEach(s => {
+                csv += `"${s.date || ''}",${s.rounds || ''},${s.difficulty || ''},${s.total_punches || 0},${s.avg_score || 0},${s.max_combo || 0},${s.best_speed || 0},${s.defense_count || 0},${s.techniques?.jab || 0},${s.techniques?.cross || 0},${s.techniques?.crochet || 0},${s.techniques?.uppercut || 0}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `combat-ai-dashboard-${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ===== DRAG & DROP =====
+        document.addEventListener('dragover', e => e.preventDefault());
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.json')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if (data.app && data.app.includes('Combat.AI')) {
+                            sessions.push(data);
+                            localStorage.setItem('combatai_sessions', JSON.stringify(sessions));
+                            renderAll();
+                        }
+                    } catch (err) { /* ignore */ }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Init
+        init();
+    </script>
+</body>
+</html>

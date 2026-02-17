@@ -1,0 +1,98 @@
+{
+  "app": "Combat.AI v2",
+  "date": "2026-02-17T22:01:14.483Z",
+  "duration_seconds": 68,
+  "rounds": 1,
+  "difficulty": "easy",
+  "total_punches": 11,
+  "avg_score": 53,
+  "max_combo": 4,
+  "best_speed": "9.9",
+  "best_score": 65,
+  "defense_count": 3,
+  "techniques": {
+    "jab": 1,
+    "cross": 0,
+    "crochet": 0,
+    "uppercut": 10
+  },
+  "history": [
+    {
+      "time": 11510,
+      "technique": "UPPERCUT D",
+      "score": 60,
+      "speed": 5.7,
+      "round": 1
+    },
+    {
+      "time": 25729,
+      "technique": "UPPERCUT G",
+      "score": 53,
+      "speed": 7.2,
+      "round": 1
+    },
+    {
+      "time": 27722,
+      "technique": "UPPERCUT G",
+      "score": 50,
+      "speed": 7.4,
+      "round": 1
+    },
+    {
+      "time": 29668,
+      "technique": "UPPERCUT D",
+      "score": 35,
+      "speed": 3.5,
+      "round": 1
+    },
+    {
+      "time": 42253,
+      "technique": "UPPERCUT G",
+      "score": 65,
+      "speed": 9.9,
+      "round": 1
+    },
+    {
+      "time": 43788,
+      "technique": "UPPERCUT G",
+      "score": 42,
+      "speed": 5.3,
+      "round": 1
+    },
+    {
+      "time": 44921,
+      "technique": "JAB",
+      "score": 48,
+      "speed": 6.9,
+      "round": 1
+    },
+    {
+      "time": 45919,
+      "technique": "UPPERCUT G",
+      "score": 51,
+      "speed": 7.8,
+      "round": 1
+    },
+    {
+      "time": 49459,
+      "technique": "UPPERCUT G",
+      "score": 65,
+      "speed": 9.1,
+      "round": 1
+    },
+    {
+      "time": 51509,
+      "technique": "UPPERCUT D",
+      "score": 62,
+      "speed": 9.4,
+      "round": 1
+    },
+    {
+      "time": 57541,
+      "technique": "UPPERCUT G",
+      "score": 50,
+      "speed": 7.2,
+      "round": 1
+    }
+  ]
+}

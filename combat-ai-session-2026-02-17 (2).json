@@ -1,0 +1,119 @@
+{
+  "app": "Combat.AI v2",
+  "date": "2026-02-17T20:39:39.645Z",
+  "duration_seconds": 71,
+  "rounds": 1,
+  "difficulty": "easy",
+  "total_punches": 14,
+  "avg_score": 61,
+  "max_combo": 3,
+  "best_speed": "9.9",
+  "best_score": 78,
+  "defense_count": 12,
+  "techniques": {
+    "jab": 6,
+    "cross": 0,
+    "crochet": 3,
+    "uppercut": 5
+  },
+  "history": [
+    {
+      "time": 12970,
+      "technique": "CROCHET D",
+      "score": 59,
+      "speed": 5.2,
+      "round": 1
+    },
+    {
+      "time": 14224,
+      "technique": "UPPERCUT D",
+      "score": 50,
+      "speed": 4.7,
+      "round": 1
+    },
+    {
+      "time": 25032,
+      "technique": "CROCHET G",
+      "score": 78,
+      "speed": 9.9,
+      "round": 1
+    },
+    {
+      "time": 25637,
+      "technique": "CROCHET G",
+      "score": 60,
+      "speed": 9.5,
+      "round": 1
+    },
+    {
+      "time": 34692,
+      "technique": "JAB",
+      "score": 70,
+      "speed": 8.8,
+      "round": 1
+    },
+    {
+      "time": 35647,
+      "technique": "JAB",
+      "score": 72,
+      "speed": 6.8,
+      "round": 1
+    },
+    {
+      "time": 36227,
+      "technique": "JAB",
+      "score": 75,
+      "speed": 8.8,
+      "round": 1
+    },
+    {
+      "time": 39245,
+      "technique": "UPPERCUT D",
+      "score": 44,
+      "speed": 6,
+      "round": 1
+    },
+    {
+      "time": 40455,
+      "technique": "JAB",
+      "score": 61,
+      "speed": 9.5,
+      "round": 1
+    },
+    {
+      "time": 44384,
+      "technique": "UPPERCUT D",
+      "score": 45,
+      "speed": 6.3,
+      "round": 1
+    },
+    {
+      "time": 45236,
+      "technique": "UPPERCUT G",
+      "score": 73,
+      "speed": 8.5,
+      "round": 1
+    },
+    {
+      "time": 51971,
+      "technique": "JAB",
+      "score": 48,
+      "speed": 5.1,
+      "round": 1
+    },
+    {
+      "time": 53306,
+      "technique": "JAB",
+      "score": 57,
+      "speed": 8.5,
+      "round": 1
+    },
+    {
+      "time": 53976,
+      "technique": "UPPERCUT G",
+      "score": 64,
+      "speed": 7.9,
+      "round": 1
+    }
+  ]
+}

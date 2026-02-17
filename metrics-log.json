@@ -1,0 +1,56 @@
+[
+  {
+    "timestamp": "2025-12-26 12:18:04",
+    "instagram": {
+      "views": "JSON sauvegard\u00e9",
+      "likes": "N/A",
+      "comments": "\ud83d\udcca R\u00c9SUM\u00c9 MONITORING"
+    },
+    "twitter": {
+      "impressions": "==================================================",
+      "likes": "\u23f0 2025-12-26 22:34:12",
+      "retweets": "\ud83d\udcf1 Instagram: 234 vues, 18 likes",
+      "replies": "\ud83d\udc26 Twitter: 1456 impressions"
+    },
+    "reddit": {
+      "upvotes": "\ud83d\udd34 Reddit: 12 upvotes",
+      "comments": "\ud83d\udccb Google Form: 8 signups"
+    },
+    "linkedin": {
+      "impressions": "==================================================",
+      "reactions": "N/A",
+      "comments": "\u2705 Monitoring termin\u00e9!"
+    },
+    "google_form": {
+      "total_signups": "N/A",
+      "yes_to_pricing": "N/A"
+    }
+  },
+  {
+    "timestamp": "2025-12-26 12:19:42",
+    "instagram": {
+      "views": "322",
+      "likes": "4",
+      "comments": "0"
+    },
+    "twitter": {
+      "impressions": "10",
+      "likes": "0",
+      "retweets": "0",
+      "replies": "0"
+    },
+    "reddit": {
+      "upvotes": "0",
+      "comments": "0"
+    },
+    "linkedin": {
+      "impressions": "4",
+      "reactions": "0",
+      "comments": "0"
+    },
+    "google_form": {
+      "total_signups": "0",
+      "yes_to_pricing": "0"
+    }
+  }
+]

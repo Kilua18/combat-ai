@@ -1,0 +1,1428 @@
+{
+  "app": "Combat.AI v2",
+  "date": "2026-02-17T19:55:20.968Z",
+  "duration_seconds": 325,
+  "rounds": 1,
+  "difficulty": "easy",
+  "total_punches": 201,
+  "avg_score": 40,
+  "max_combo": 187,
+  "best_speed": "229.2",
+  "best_score": 58,
+  "defense_count": 70,
+  "techniques": {
+    "jab": 1,
+    "cross": 142,
+    "crochet": 2,
+    "uppercut": 56
+  },
+  "history": [
+    {
+      "time": 661,
+      "technique": "CROSS",
+      "score": 44,
+      "speed": 18.1,
+      "round": 1
+    },
+    {
+      "time": 1536,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 25.1,
+      "round": 1
+    },
+    {
+      "time": 2403,
+      "technique": "CROSS",
+      "score": 44,
+      "speed": 9.7,
+      "round": 1
+    },
+    {
+      "time": 4686,
+      "technique": "UPPERCUT D",
+      "score": 44,
+      "speed": 67.8,
+      "round": 1
+    },
+    {
+      "time": 5538,
+      "technique": "CROSS",
+      "score": 33,
+      "speed": 4.8,
+      "round": 1
+    },
+    {
+      "time": 6456,
+      "technique": "CROSS",
+      "score": 17,
+      "speed": 2.3,
+      "round": 1
+    },
+    {
+      "time": 7338,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 7.4,
+      "round": 1
+    },
+    {
+      "time": 8153,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 33.2,
+      "round": 1
+    },
+    {
+      "time": 9006,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 89.9,
+      "round": 1
+    },
+    {
+      "time": 9809,
+      "technique": "UPPERCUT D",
+      "score": 33,
+      "speed": 5.2,
+      "round": 1
+    },
+    {
+      "time": 10619,
+      "technique": "CROSS",
+      "score": 18,
+      "speed": 2.3,
+      "round": 1
+    },
+    {
+      "time": 11475,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 8.9,
+      "round": 1
+    },
+    {
+      "time": 12276,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 47.8,
+      "round": 1
+    },
+    {
+      "time": 13127,
+      "technique": "CROSS",
+      "score": 51,
+      "speed": 75.3,
+      "round": 1
+    },
+    {
+      "time": 13993,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 8.7,
+      "round": 1
+    },
+    {
+      "time": 14794,
+      "technique": "UPPERCUT D",
+      "score": 42,
+      "speed": 14.6,
+      "round": 1
+    },
+    {
+      "time": 15595,
+      "technique": "CROSS",
+      "score": 49,
+      "speed": 21.6,
+      "round": 1
+    },
+    {
+      "time": 16462,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 6.4,
+      "round": 1
+    },
+    {
+      "time": 17267,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 20.3,
+      "round": 1
+    },
+    {
+      "time": 18186,
+      "technique": "UPPERCUT D",
+      "score": 51,
+      "speed": 6.8,
+      "round": 1
+    },
+    {
+      "time": 18993,
+      "technique": "CROSS",
+      "score": 25,
+      "speed": 2.6,
+      "round": 1
+    },
+    {
+      "time": 19807,
+      "technique": "CROSS",
+      "score": 38,
+      "speed": 4.8,
+      "round": 1
+    },
+    {
+      "time": 20663,
+      "technique": "CROSS",
+      "score": 48,
+      "speed": 23.3,
+      "round": 1
+    },
+    {
+      "time": 21467,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 20.3,
+      "round": 1
+    },
+    {
+      "time": 22330,
+      "technique": "CROSS",
+      "score": 58,
+      "speed": 48,
+      "round": 1
+    },
+    {
+      "time": 23137,
+      "technique": "CROCHET D",
+      "score": 52,
+      "speed": 26.2,
+      "round": 1
+    },
+    {
+      "time": 24004,
+      "technique": "CROSS",
+      "score": 38,
+      "speed": 6.3,
+      "round": 1
+    },
+    {
+      "time": 24855,
+      "technique": "CROSS",
+      "score": 46,
+      "speed": 20.5,
+      "round": 1
+    },
+    {
+      "time": 25656,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 25.3,
+      "round": 1
+    },
+    {
+      "time": 26457,
+      "technique": "CROSS",
+      "score": 18,
+      "speed": 3,
+      "round": 1
+    },
+    {
+      "time": 28020,
+      "technique": "CROSS",
+      "score": 47,
+      "speed": 114.5,
+      "round": 1
+    },
+    {
+      "time": 28851,
+      "technique": "CROSS",
+      "score": 54,
+      "speed": 124.8,
+      "round": 1
+    },
+    {
+      "time": 29652,
+      "technique": "UPPERCUT D",
+      "score": 50,
+      "speed": 37,
+      "round": 1
+    },
+    {
+      "time": 30460,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 28.9,
+      "round": 1
+    },
+    {
+      "time": 31261,
+      "technique": "UPPERCUT D",
+      "score": 42,
+      "speed": 16.2,
+      "round": 1
+    },
+    {
+      "time": 32076,
+      "technique": "UPPERCUT D",
+      "score": 35,
+      "speed": 4.9,
+      "round": 1
+    },
+    {
+      "time": 32878,
+      "technique": "UPPERCUT D",
+      "score": 42,
+      "speed": 41.9,
+      "round": 1
+    },
+    {
+      "time": 33679,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 19.4,
+      "round": 1
+    },
+    {
+      "time": 34544,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 58.4,
+      "round": 1
+    },
+    {
+      "time": 35408,
+      "technique": "UPPERCUT D",
+      "score": 43,
+      "speed": 20.9,
+      "round": 1
+    },
+    {
+      "time": 36260,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 14.3,
+      "round": 1
+    },
+    {
+      "time": 37066,
+      "technique": "UPPERCUT D",
+      "score": 36,
+      "speed": 6,
+      "round": 1
+    },
+    {
+      "time": 37931,
+      "technique": "UPPERCUT D",
+      "score": 45,
+      "speed": 36.6,
+      "round": 1
+    },
+    {
+      "time": 38733,
+      "technique": "CROSS",
+      "score": 25,
+      "speed": 3.4,
+      "round": 1
+    },
+    {
+      "time": 39594,
+      "technique": "CROSS",
+      "score": 32,
+      "speed": 5,
+      "round": 1
+    },
+    {
+      "time": 40397,
+      "technique": "CROSS",
+      "score": 46,
+      "speed": 22.3,
+      "round": 1
+    },
+    {
+      "time": 41279,
+      "technique": "CROSS",
+      "score": 24,
+      "speed": 3.1,
+      "round": 1
+    },
+    {
+      "time": 42086,
+      "technique": "UPPERCUT D",
+      "score": 25,
+      "speed": 3.4,
+      "round": 1
+    },
+    {
+      "time": 42892,
+      "technique": "CROSS",
+      "score": 46,
+      "speed": 94.7,
+      "round": 1
+    },
+    {
+      "time": 43731,
+      "technique": "CROSS",
+      "score": 22,
+      "speed": 3.6,
+      "round": 1
+    },
+    {
+      "time": 44601,
+      "technique": "UPPERCUT D",
+      "score": 43,
+      "speed": 20.7,
+      "round": 1
+    },
+    {
+      "time": 45406,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 32.2,
+      "round": 1
+    },
+    {
+      "time": 46273,
+      "technique": "UPPERCUT D",
+      "score": 39,
+      "speed": 6.4,
+      "round": 1
+    },
+    {
+      "time": 47140,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 10.3,
+      "round": 1
+    },
+    {
+      "time": 47995,
+      "technique": "CROSS",
+      "score": 51,
+      "speed": 19.2,
+      "round": 1
+    },
+    {
+      "time": 48876,
+      "technique": "CROSS",
+      "score": 44,
+      "speed": 25.7,
+      "round": 1
+    },
+    {
+      "time": 49741,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 8.6,
+      "round": 1
+    },
+    {
+      "time": 50608,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 8.6,
+      "round": 1
+    },
+    {
+      "time": 51415,
+      "technique": "UPPERCUT D",
+      "score": 48,
+      "speed": 25.5,
+      "round": 1
+    },
+    {
+      "time": 52271,
+      "technique": "CROSS",
+      "score": 45,
+      "speed": 11.5,
+      "round": 1
+    },
+    {
+      "time": 53124,
+      "technique": "UPPERCUT D",
+      "score": 46,
+      "speed": 69.1,
+      "round": 1
+    },
+    {
+      "time": 53929,
+      "technique": "CROSS",
+      "score": 48,
+      "speed": 26.1,
+      "round": 1
+    },
+    {
+      "time": 54730,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 15.8,
+      "round": 1
+    },
+    {
+      "time": 55531,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 7.9,
+      "round": 1
+    },
+    {
+      "time": 56416,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 18.9,
+      "round": 1
+    },
+    {
+      "time": 57280,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 32.7,
+      "round": 1
+    },
+    {
+      "time": 58081,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 28.6,
+      "round": 1
+    },
+    {
+      "time": 58948,
+      "technique": "CROSS",
+      "score": 22,
+      "speed": 3.6,
+      "round": 1
+    },
+    {
+      "time": 59749,
+      "technique": "CROSS",
+      "score": 28,
+      "speed": 4.5,
+      "round": 1
+    },
+    {
+      "time": 60606,
+      "technique": "CROSS",
+      "score": 44,
+      "speed": 25.6,
+      "round": 1
+    },
+    {
+      "time": 61472,
+      "technique": "UPPERCUT D",
+      "score": 37,
+      "speed": 5.8,
+      "round": 1
+    },
+    {
+      "time": 62330,
+      "technique": "UPPERCUT D",
+      "score": 22,
+      "speed": 3.6,
+      "round": 1
+    },
+    {
+      "time": 63133,
+      "technique": "CROSS",
+      "score": 29,
+      "speed": 4.9,
+      "round": 1
+    },
+    {
+      "time": 64015,
+      "technique": "CROSS",
+      "score": 27,
+      "speed": 4.5,
+      "round": 1
+    },
+    {
+      "time": 64826,
+      "technique": "UPPERCUT D",
+      "score": 43,
+      "speed": 7,
+      "round": 1
+    },
+    {
+      "time": 65673,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 12.4,
+      "round": 1
+    },
+    {
+      "time": 66543,
+      "technique": "UPPERCUT D",
+      "score": 41,
+      "speed": 13.9,
+      "round": 1
+    },
+    {
+      "time": 67404,
+      "technique": "UPPERCUT D",
+      "score": 46,
+      "speed": 76.7,
+      "round": 1
+    },
+    {
+      "time": 68269,
+      "technique": "CROSS",
+      "score": 45,
+      "speed": 7.9,
+      "round": 1
+    },
+    {
+      "time": 69074,
+      "technique": "CROSS",
+      "score": 21,
+      "speed": 3.3,
+      "round": 1
+    },
+    {
+      "time": 69875,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 39.2,
+      "round": 1
+    },
+    {
+      "time": 70744,
+      "technique": "CROSS",
+      "score": 44,
+      "speed": 14.5,
+      "round": 1
+    },
+    {
+      "time": 71611,
+      "technique": "CROSS",
+      "score": 22,
+      "speed": 3.6,
+      "round": 1
+    },
+    {
+      "time": 72476,
+      "technique": "CROSS",
+      "score": 29,
+      "speed": 4.4,
+      "round": 1
+    },
+    {
+      "time": 73283,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 29.6,
+      "round": 1
+    },
+    {
+      "time": 74147,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 6.8,
+      "round": 1
+    },
+    {
+      "time": 75012,
+      "technique": "CROSS",
+      "score": 44,
+      "speed": 16.7,
+      "round": 1
+    },
+    {
+      "time": 75865,
+      "technique": "UPPERCUT D",
+      "score": 42,
+      "speed": 10.9,
+      "round": 1
+    },
+    {
+      "time": 76666,
+      "technique": "UPPERCUT D",
+      "score": 45,
+      "speed": 16.6,
+      "round": 1
+    },
+    {
+      "time": 77533,
+      "technique": "UPPERCUT D",
+      "score": 28,
+      "speed": 4.4,
+      "round": 1
+    },
+    {
+      "time": 78416,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 77.7,
+      "round": 1
+    },
+    {
+      "time": 79282,
+      "technique": "CROSS",
+      "score": 28,
+      "speed": 4.7,
+      "round": 1
+    },
+    {
+      "time": 80084,
+      "technique": "UPPERCUT D",
+      "score": 47,
+      "speed": 22,
+      "round": 1
+    },
+    {
+      "time": 80951,
+      "technique": "UPPERCUT D",
+      "score": 41,
+      "speed": 39.4,
+      "round": 1
+    },
+    {
+      "time": 81806,
+      "technique": "UPPERCUT D",
+      "score": 43,
+      "speed": 44.7,
+      "round": 1
+    },
+    {
+      "time": 82668,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 114.1,
+      "round": 1
+    },
+    {
+      "time": 83555,
+      "technique": "CROSS",
+      "score": 48,
+      "speed": 55.4,
+      "round": 1
+    },
+    {
+      "time": 84358,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 23.5,
+      "round": 1
+    },
+    {
+      "time": 85216,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 49.2,
+      "round": 1
+    },
+    {
+      "time": 86067,
+      "technique": "UPPERCUT D",
+      "score": 41,
+      "speed": 22.1,
+      "round": 1
+    },
+    {
+      "time": 86878,
+      "technique": "CROSS",
+      "score": 50,
+      "speed": 11.3,
+      "round": 1
+    },
+    {
+      "time": 87741,
+      "technique": "CROSS",
+      "score": 18,
+      "speed": 2.7,
+      "round": 1
+    },
+    {
+      "time": 88608,
+      "technique": "UPPERCUT D",
+      "score": 39,
+      "speed": 6.3,
+      "round": 1
+    },
+    {
+      "time": 89473,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 8.2,
+      "round": 1
+    },
+    {
+      "time": 90276,
+      "technique": "UPPERCUT D",
+      "score": 48,
+      "speed": 13.2,
+      "round": 1
+    },
+    {
+      "time": 91211,
+      "technique": "JAB",
+      "score": 23,
+      "speed": 2.6,
+      "round": 1
+    },
+    {
+      "time": 92071,
+      "technique": "UPPERCUT D",
+      "score": 42,
+      "speed": 25.9,
+      "round": 1
+    },
+    {
+      "time": 92873,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 8,
+      "round": 1
+    },
+    {
+      "time": 93677,
+      "technique": "UPPERCUT D",
+      "score": 32,
+      "speed": 4.6,
+      "round": 1
+    },
+    {
+      "time": 94478,
+      "technique": "CROSS",
+      "score": 15,
+      "speed": 2.2,
+      "round": 1
+    },
+    {
+      "time": 95279,
+      "technique": "CROSS",
+      "score": 30,
+      "speed": 5,
+      "round": 1
+    },
+    {
+      "time": 96082,
+      "technique": "CROSS",
+      "score": 44,
+      "speed": 7.2,
+      "round": 1
+    },
+    {
+      "time": 96948,
+      "technique": "UPPERCUT G",
+      "score": 45,
+      "speed": 6.7,
+      "round": 1
+    },
+    {
+      "time": 97797,
+      "technique": "CROSS",
+      "score": 36,
+      "speed": 5.7,
+      "round": 1
+    },
+    {
+      "time": 98599,
+      "technique": "UPPERCUT D",
+      "score": 42,
+      "speed": 7.8,
+      "round": 1
+    },
+    {
+      "time": 99462,
+      "technique": "CROSS",
+      "score": 47,
+      "speed": 16,
+      "round": 1
+    },
+    {
+      "time": 100343,
+      "technique": "UPPERCUT D",
+      "score": 41,
+      "speed": 6.5,
+      "round": 1
+    },
+    {
+      "time": 101157,
+      "technique": "CROSS",
+      "score": 44,
+      "speed": 10,
+      "round": 1
+    },
+    {
+      "time": 102018,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 42.4,
+      "round": 1
+    },
+    {
+      "time": 102885,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 21.7,
+      "round": 1
+    },
+    {
+      "time": 103734,
+      "technique": "UPPERCUT D",
+      "score": 46,
+      "speed": 32.7,
+      "round": 1
+    },
+    {
+      "time": 104535,
+      "technique": "CROSS",
+      "score": 18,
+      "speed": 2.5,
+      "round": 1
+    },
+    {
+      "time": 105408,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 25.9,
+      "round": 1
+    },
+    {
+      "time": 106287,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 9.4,
+      "round": 1
+    },
+    {
+      "time": 107089,
+      "technique": "UPPERCUT G",
+      "score": 42,
+      "speed": 17.4,
+      "round": 1
+    },
+    {
+      "time": 107890,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 18.5,
+      "round": 1
+    },
+    {
+      "time": 108755,
+      "technique": "UPPERCUT D",
+      "score": 44,
+      "speed": 99.3,
+      "round": 1
+    },
+    {
+      "time": 109602,
+      "technique": "CROSS",
+      "score": 49,
+      "speed": 106.9,
+      "round": 1
+    },
+    {
+      "time": 110405,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 14.4,
+      "round": 1
+    },
+    {
+      "time": 111211,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 17.4,
+      "round": 1
+    },
+    {
+      "time": 112078,
+      "technique": "CROSS",
+      "score": 29,
+      "speed": 4.5,
+      "round": 1
+    },
+    {
+      "time": 112943,
+      "technique": "UPPERCUT G",
+      "score": 37,
+      "speed": 5.6,
+      "round": 1
+    },
+    {
+      "time": 113744,
+      "technique": "UPPERCUT G",
+      "score": 40,
+      "speed": 5.9,
+      "round": 1
+    },
+    {
+      "time": 114613,
+      "technique": "UPPERCUT D",
+      "score": 42,
+      "speed": 7.3,
+      "round": 1
+    },
+    {
+      "time": 115481,
+      "technique": "CROSS",
+      "score": 46,
+      "speed": 29.8,
+      "round": 1
+    },
+    {
+      "time": 116347,
+      "technique": "UPPERCUT D",
+      "score": 33,
+      "speed": 4.5,
+      "round": 1
+    },
+    {
+      "time": 117215,
+      "technique": "CROSS",
+      "score": 39,
+      "speed": 6.6,
+      "round": 1
+    },
+    {
+      "time": 118081,
+      "technique": "UPPERCUT D",
+      "score": 47,
+      "speed": 40.9,
+      "round": 1
+    },
+    {
+      "time": 118882,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 35.2,
+      "round": 1
+    },
+    {
+      "time": 119748,
+      "technique": "UPPERCUT D",
+      "score": 41,
+      "speed": 51.4,
+      "round": 1
+    },
+    {
+      "time": 120550,
+      "technique": "UPPERCUT G",
+      "score": 47,
+      "speed": 116.6,
+      "round": 1
+    },
+    {
+      "time": 121403,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 23.2,
+      "round": 1
+    },
+    {
+      "time": 122285,
+      "technique": "CROSS",
+      "score": 46,
+      "speed": 14.6,
+      "round": 1
+    },
+    {
+      "time": 123175,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 10.1,
+      "round": 1
+    },
+    {
+      "time": 124020,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 7.1,
+      "round": 1
+    },
+    {
+      "time": 124874,
+      "technique": "UPPERCUT D",
+      "score": 47,
+      "speed": 56.6,
+      "round": 1
+    },
+    {
+      "time": 125675,
+      "technique": "UPPERCUT D",
+      "score": 41,
+      "speed": 38.2,
+      "round": 1
+    },
+    {
+      "time": 126539,
+      "technique": "CROSS",
+      "score": 18,
+      "speed": 2.3,
+      "round": 1
+    },
+    {
+      "time": 127401,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 106.6,
+      "round": 1
+    },
+    {
+      "time": 128217,
+      "technique": "CROSS",
+      "score": 44,
+      "speed": 11.5,
+      "round": 1
+    },
+    {
+      "time": 129022,
+      "technique": "UPPERCUT D",
+      "score": 44,
+      "speed": 49.5,
+      "round": 1
+    },
+    {
+      "time": 129825,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 17.6,
+      "round": 1
+    },
+    {
+      "time": 130691,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 29.2,
+      "round": 1
+    },
+    {
+      "time": 131545,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 12.2,
+      "round": 1
+    },
+    {
+      "time": 132412,
+      "technique": "UPPERCUT D",
+      "score": 41,
+      "speed": 14,
+      "round": 1
+    },
+    {
+      "time": 133275,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 54.5,
+      "round": 1
+    },
+    {
+      "time": 134077,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 6.9,
+      "round": 1
+    },
+    {
+      "time": 134879,
+      "technique": "UPPERCUT D",
+      "score": 28,
+      "speed": 4.6,
+      "round": 1
+    },
+    {
+      "time": 135681,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 30.7,
+      "round": 1
+    },
+    {
+      "time": 136540,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 8.5,
+      "round": 1
+    },
+    {
+      "time": 137342,
+      "technique": "CROSS",
+      "score": 45,
+      "speed": 23.9,
+      "round": 1
+    },
+    {
+      "time": 138149,
+      "technique": "UPPERCUT D",
+      "score": 43,
+      "speed": 8.7,
+      "round": 1
+    },
+    {
+      "time": 138951,
+      "technique": "CROSS",
+      "score": 46,
+      "speed": 12.6,
+      "round": 1
+    },
+    {
+      "time": 139818,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 15.9,
+      "round": 1
+    },
+    {
+      "time": 140682,
+      "technique": "CROSS",
+      "score": 25,
+      "speed": 3.7,
+      "round": 1
+    },
+    {
+      "time": 141484,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 49,
+      "round": 1
+    },
+    {
+      "time": 142349,
+      "technique": "UPPERCUT D",
+      "score": 44,
+      "speed": 19.7,
+      "round": 1
+    },
+    {
+      "time": 143213,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 45.4,
+      "round": 1
+    },
+    {
+      "time": 144017,
+      "technique": "UPPERCUT D",
+      "score": 41,
+      "speed": 62.8,
+      "round": 1
+    },
+    {
+      "time": 144819,
+      "technique": "CROSS",
+      "score": 46,
+      "speed": 7.1,
+      "round": 1
+    },
+    {
+      "time": 145620,
+      "technique": "CROSS",
+      "score": 51,
+      "speed": 6.6,
+      "round": 1
+    },
+    {
+      "time": 146422,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 8.8,
+      "round": 1
+    },
+    {
+      "time": 147275,
+      "technique": "CROSS",
+      "score": 48,
+      "speed": 16.5,
+      "round": 1
+    },
+    {
+      "time": 148133,
+      "technique": "UPPERCUT D",
+      "score": 43,
+      "speed": 11.7,
+      "round": 1
+    },
+    {
+      "time": 148938,
+      "technique": "CROSS",
+      "score": 47,
+      "speed": 27.7,
+      "round": 1
+    },
+    {
+      "time": 149740,
+      "technique": "CROSS",
+      "score": 54,
+      "speed": 41.3,
+      "round": 1
+    },
+    {
+      "time": 150547,
+      "technique": "CROSS",
+      "score": 46,
+      "speed": 11.3,
+      "round": 1
+    },
+    {
+      "time": 151424,
+      "technique": "CROCHET D",
+      "score": 54,
+      "speed": 15.7,
+      "round": 1
+    },
+    {
+      "time": 152571,
+      "technique": "CROSS",
+      "score": 41,
+      "speed": 229.2,
+      "round": 1
+    },
+    {
+      "time": 153502,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 38.6,
+      "round": 1
+    },
+    {
+      "time": 154884,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 7.6,
+      "round": 1
+    },
+    {
+      "time": 155773,
+      "technique": "CROSS",
+      "score": 39,
+      "speed": 6.3,
+      "round": 1
+    },
+    {
+      "time": 156753,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 57.9,
+      "round": 1
+    },
+    {
+      "time": 157581,
+      "technique": "CROSS",
+      "score": 51,
+      "speed": 95.4,
+      "round": 1
+    },
+    {
+      "time": 158386,
+      "technique": "CROSS",
+      "score": 25,
+      "speed": 4,
+      "round": 1
+    },
+    {
+      "time": 160258,
+      "technique": "UPPERCUT D",
+      "score": 42,
+      "speed": 190,
+      "round": 1
+    },
+    {
+      "time": 161321,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 153.5,
+      "round": 1
+    },
+    {
+      "time": 162189,
+      "technique": "CROSS",
+      "score": 36,
+      "speed": 5.9,
+      "round": 1
+    },
+    {
+      "time": 163469,
+      "technique": "UPPERCUT D",
+      "score": 44,
+      "speed": 45.3,
+      "round": 1
+    },
+    {
+      "time": 165197,
+      "technique": "CROSS",
+      "score": 47,
+      "speed": 87.7,
+      "round": 1
+    },
+    {
+      "time": 167871,
+      "technique": "CROSS",
+      "score": 46,
+      "speed": 9,
+      "round": 1
+    },
+    {
+      "time": 168846,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 24.6,
+      "round": 1
+    },
+    {
+      "time": 170015,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 12.1,
+      "round": 1
+    },
+    {
+      "time": 171248,
+      "technique": "CROSS",
+      "score": 33,
+      "speed": 5.5,
+      "round": 1
+    },
+    {
+      "time": 172203,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 11.8,
+      "round": 1
+    },
+    {
+      "time": 173402,
+      "technique": "CROSS",
+      "score": 20,
+      "speed": 2.9,
+      "round": 1
+    },
+    {
+      "time": 174385,
+      "technique": "CROSS",
+      "score": 43,
+      "speed": 11.3,
+      "round": 1
+    },
+    {
+      "time": 175401,
+      "technique": "CROSS",
+      "score": 36,
+      "speed": 6,
+      "round": 1
+    },
+    {
+      "time": 176605,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 15.1,
+      "round": 1
+    },
+    {
+      "time": 177414,
+      "technique": "CROSS",
+      "score": 40,
+      "speed": 8.6,
+      "round": 1
+    },
+    {
+      "time": 178253,
+      "technique": "CROSS",
+      "score": 42,
+      "speed": 8.5,
+      "round": 1
+    }
+  ]
+}

@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combat.AI v2 - POC by Norman</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #video {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        #canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+        }
+
+        /* ===== START SCREEN ===== */
+        #start-screen {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #0a0a0a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            animation: fadeIn 0.5s ease;
+        }
+
+        #start-screen.hidden { display: none; }
+
+        .logo-main {
+            font-family: 'Orbitron', monospace;
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
+            filter: drop-shadow(0 0 30px rgba(0, 255, 136, 0.5));
+            margin-bottom: 10px;
+        }
+
+        .logo-sub {
+            font-size: 18px;
+            color: #888;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 50px;
+        }
+
+        .round-select {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .round-btn {
+            background: transparent;
+            border: 2px solid #333;
+            color: #888;
+            padding: 15px 30px;
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .round-btn:hover, .round-btn.active {
+            border-color: #00ff88;
+            color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .difficulty-select {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .diff-btn {
+            background: transparent;
+            border: 2px solid #333;
+            color: #888;
+            padding: 12px 25px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .diff-btn:hover, .diff-btn.active {
+            border-color: #ff6600;
+            color: #ff6600;
+            box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
+        }
+
+        #start-btn {
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            border: none;
+            color: #000;
+            padding: 20px 60px;
+            font-family: 'Orbitron', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        #start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
+        }
+
+        /* ===== HUD PRINCIPAL ===== */
+        #hud-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 15px 20px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hud-panel {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 12px;
+            padding: 15px 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Timer central */
+        #timer-panel {
+            text-align: center;
+            min-width: 200px;
+        }
+
+        #round-label {
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            color: #00ff88;
+            letter-spacing: 3px;
+        }
+
+        #timer {
+            font-family: 'Orbitron', monospace;
+            font-size: 48px;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1;
+        }
+
+        #timer.warning { color: #ff6600; animation: blink 1s infinite; }
+        #timer.danger { color: #ff0000; animation: blink 0.5s infinite; }
+
+        @keyframes blink {
+            50% { opacity: 0.5; }
+        }
+
+        /* Stats panel gauche */
+        #stats-panel {
+            min-width: 220px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-row:last-child { border-bottom: none; }
+
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* Combo panel droite */
+        #combo-panel {
+            min-width: 180px;
+            text-align: center;
+        }
+
+        #combo-count {
+            font-family: 'Orbitron', monospace;
+            font-size: 56px;
+            font-weight: 900;
+            line-height: 1;
+            background: linear-gradient(135deg, #ff6600, #ff0066);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #combo-label {
+            font-size: 14px;
+            color: #ff6600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        #combo-bar {
+            width: 100%;
+            height: 4px;
+            background: #222;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        #combo-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6600, #ff0066);
+            border-radius: 2px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        /* ===== TECHNIQUE DISPLAY ===== */
+        #technique-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        #technique-display.visible { opacity: 1; }
+
+        #technique-name {
+            font-family: 'Orbitron', monospace;
+            font-size: 64px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.8), 0 0 60px rgba(0, 255, 136, 0.4);
+            text-transform: uppercase;
+        }
+
+        #technique-score {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        .score-excellent { color: #00ff88; }
+        .score-good { color: #ffcc00; }
+        .score-weak { color: #ff4444; }
+
+        /* ===== DEFENSE INDICATOR ===== */
+        #defense-indicator {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 15;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        #defense-indicator.visible { opacity: 1; }
+
+        #defense-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            color: #00ccff;
+            text-shadow: 0 0 20px rgba(0, 204, 255, 0.8);
+        }
+
+        /* ===== BOTTOM BAR ===== */
+        #hud-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 15px 20px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Historique des coups */
+        #history-panel {
+            display: flex;
+            gap: 6px;
+            align-items: flex-end;
+        }
+
+        .history-bar {
+            width: 8px;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s;
+            min-height: 5px;
+        }
+
+        /* Branding */
+        #branding {
+            font-family: 'Orbitron', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: rgba(0, 255, 136, 0.4);
+            letter-spacing: 3px;
+        }
+
+        /* ===== END SCREEN ===== */
+        #end-screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        #end-screen.visible { display: flex; }
+
+        .end-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 48px;
+            font-weight: 900;
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+
+        .end-subtitle {
+            color: #888;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+
+        .end-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .end-stat {
+            text-align: center;
+            padding: 20px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 12px;
+        }
+
+        .end-stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 36px;
+            font-weight: 900;
+            color: #00ff88;
+        }
+
+        .end-stat-label {
+            font-size: 13px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        .end-techniques {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .end-tech {
+            text-align: center;
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .end-tech-name {
+            font-size: 14px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .end-tech-count {
+            font-family: 'Orbitron', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .end-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .end-btn {
+            padding: 15px 40px;
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            pointer-events: all;
+        }
+
+        .end-btn-primary {
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            border: none;
+            color: #000;
+        }
+
+        .end-btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+        }
+
+        .end-btn-secondary {
+            background: transparent;
+            border: 2px solid #333;
+            color: #888;
+        }
+
+        .end-btn-secondary:hover {
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+
+        /* ===== COMBO CALLER ===== */
+        #combo-caller {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 18;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #combo-caller.visible { opacity: 1; }
+
+        #combo-caller-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 42px;
+            font-weight: 900;
+            color: #ff6600;
+            text-shadow: 0 0 30px rgba(255, 102, 0, 0.6);
+            letter-spacing: 5px;
+        }
+
+        #combo-caller-sub {
+            font-size: 18px;
+            color: #ffcc00;
+            margin-top: 8px;
+        }
+
+        .combo-check {
+            color: #00ff88 !important;
+        }
+
+        .combo-miss {
+            color: #ff4444 !important;
+        }
+
+        /* ===== CONTROL BUTTONS (pause/stop) ===== */
+        #control-buttons {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            z-index: 25;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #control-buttons.visible { display: flex; }
+
+        .ctrl-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            pointer-events: all;
+        }
+
+        .ctrl-btn:hover {
+            border-color: #00ff88;
+            background: rgba(0,255,136,0.2);
+        }
+
+        .ctrl-btn-stop:hover {
+            border-color: #ff4444;
+            background: rgba(255,68,68,0.2);
+        }
+
+        /* ===== PAUSE OVERLAY ===== */
+        #pause-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            z-index: 90;
+        }
+
+        #pause-overlay.visible { display: flex; }
+
+        #pause-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 64px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            animation: blink 1.5s infinite;
+        }
+
+        .pause-buttons {
+            display: flex;
+            gap: 20px;
+            pointer-events: all;
+        }
+
+        .pause-btn {
+            padding: 15px 35px;
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .pause-btn-resume {
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            border: none;
+            color: #000;
+        }
+
+        .pause-btn-resume:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0,255,136,0.5);
+        }
+
+        .pause-btn-stop {
+            background: transparent;
+            border: 2px solid #ff4444;
+            color: #ff4444;
+        }
+
+        .pause-btn-stop:hover {
+            background: rgba(255,68,68,0.2);
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translate(-50%, -50%) translateY(20px); opacity: 0; }
+            to { transform: translate(-50%, -50%) translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+
+        <!-- START SCREEN -->
+        <div id="start-screen">
+            <div class="logo-main">COMBAT.AI</div>
+            <div class="logo-sub">Analyse en temps r&eacute;el</div>
+
+            <div style="color:#888; margin-bottom:10px; font-size:14px; letter-spacing:2px;">DUR&Eacute;E DU ROUND</div>
+            <div class="round-select">
+                <button class="round-btn" data-time="60">1 MIN</button>
+                <button class="round-btn" data-time="120">2 MIN</button>
+                <button class="round-btn active" data-time="180">3 MIN</button>
+            </div>
+
+            <div style="color:#888; margin-bottom:10px; font-size:14px; letter-spacing:2px;">ROUNDS</div>
+            <div class="round-select">
+                <button class="round-btn" data-rounds="1">1</button>
+                <button class="round-btn active" data-rounds="3">3</button>
+                <button class="round-btn" data-rounds="5">5</button>
+                <button class="round-btn" data-rounds="12">12</button>
+            </div>
+
+            <div style="color:#888; margin-bottom:10px; font-size:14px; letter-spacing:2px;">MODE</div>
+            <div class="difficulty-select">
+                <button class="diff-btn" data-mode="libre">Libre</button>
+                <button class="diff-btn active" data-mode="combo">Combos</button>
+            </div>
+
+            <div style="color:#888; margin-bottom:10px; font-size:14px; letter-spacing:2px;">SENSIBILIT&Eacute;</div>
+            <div class="difficulty-select">
+                <button class="diff-btn" data-diff="easy">Facile</button>
+                <button class="diff-btn active" data-diff="normal">Normal</button>
+                <button class="diff-btn" data-diff="hard">Expert</button>
+            </div>
+
+            <button id="start-btn">GO</button>
+        </div>
+
+        <!-- HUD TOP -->
+        <div id="hud-top" style="display:none;">
+            <div id="stats-panel" class="hud-panel">
+                <div class="stat-row">
+                    <span class="stat-label">Technique</span>
+                    <span class="stat-value" id="current-technique">---</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Vitesse</span>
+                    <span class="stat-value" id="current-speed">0.0 m/s</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Extension</span>
+                    <span class="stat-value" id="current-extension">0%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Force</span>
+                    <span class="stat-value" id="current-force">---</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Total</span>
+                    <span class="stat-value" id="total-punches">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Posture</span>
+                    <span class="stat-value" id="posture-status" style="font-size:13px;">---</span>
+                </div>
+            </div>
+
+            <div id="timer-panel" class="hud-panel">
+                <div id="round-label">ROUND 1</div>
+                <div id="timer">3:00</div>
+            </div>
+
+            <div id="combo-panel" class="hud-panel">
+                <div id="combo-count">0</div>
+                <div id="combo-label">COMBO</div>
+                <div id="combo-bar"><div id="combo-fill"></div></div>
+            </div>
+        </div>
+
+        <!-- TECHNIQUE DISPLAY -->
+        <div id="technique-display">
+            <div id="technique-name"></div>
+            <div id="technique-score"></div>
+        </div>
+
+        <!-- COMBO CALLER -->
+        <div id="combo-caller">
+            <div id="combo-caller-text"></div>
+            <div id="combo-caller-sub"></div>
+        </div>
+
+        <!-- DEFENSE INDICATOR -->
+        <div id="defense-indicator">
+            <div id="defense-text">GUARD UP</div>
+        </div>
+
+        <!-- CONTROL BUTTONS -->
+        <div id="control-buttons">
+            <button class="ctrl-btn" id="btn-pause" title="Pause">⏸</button>
+            <button class="ctrl-btn ctrl-btn-stop" id="btn-stop" title="Arr&ecirc;ter">⏹</button>
+        </div>
+
+        <!-- HUD BOTTOM -->
+        <div id="hud-bottom" style="display:none;">
+            <div id="history-panel"></div>
+            <div id="branding">COMBAT.AI v2</div>
+        </div>
+
+        <!-- PAUSE OVERLAY -->
+        <div id="pause-overlay">
+            <div id="pause-text">PAUSE</div>
+            <div class="pause-buttons">
+                <button class="pause-btn pause-btn-resume" id="btn-resume">REPRENDRE</button>
+                <button class="pause-btn pause-btn-stop" id="btn-end-session">ARR&Ecirc;TER</button>
+            </div>
+        </div>
+
+        <!-- END SCREEN -->
+        <div id="end-screen">
+            <div class="end-title">SESSION TERMIN&Eacute;E</div>
+            <div class="end-subtitle" id="end-duration"></div>
+
+            <div class="end-stats">
+                <div class="end-stat">
+                    <div class="end-stat-value" id="end-total">0</div>
+                    <div class="end-stat-label">Total coups</div>
+                </div>
+                <div class="end-stat">
+                    <div class="end-stat-value" id="end-avg-score">0</div>
+                    <div class="end-stat-label">Score moyen</div>
+                </div>
+                <div class="end-stat">
+                    <div class="end-stat-value" id="end-max-combo">0</div>
+                    <div class="end-stat-label">Max combo</div>
+                </div>
+                <div class="end-stat">
+                    <div class="end-stat-value" id="end-best-speed">0</div>
+                    <div class="end-stat-label">Meilleure vitesse</div>
+                </div>
+                <div class="end-stat">
+                    <div class="end-stat-value" id="end-best-score">0</div>
+                    <div class="end-stat-label">Meilleur score</div>
+                </div>
+                <div class="end-stat">
+                    <div class="end-stat-value" id="end-defense">0</div>
+                    <div class="end-stat-label">D&eacute;fenses</div>
+                </div>
+            </div>
+
+            <div class="end-techniques" id="end-techniques"></div>
+
+            <div class="end-buttons">
+                <button class="end-btn end-btn-primary" id="restart-btn">REJOUER</button>
+                <button class="end-btn end-btn-secondary" id="export-btn">EXPORTER</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIG v2.1 - CALIBRAGE REALISTE =====
+        // Vitesse en pixels normalises/frame. Un vrai coup = 0.08-0.25 range.
+        // En dessous de 0.05 = bruit/micro-mouvement. Au dessus de 0.30 = artefact tracking.
+        const CONFIG = {
+            easy:   { speedMin: 0.05, speedIdeal: 0.10, extensionMin: 0.18, cooldown: 500, comboWindow: 2500 },
+            normal: { speedMin: 0.07, speedIdeal: 0.14, extensionMin: 0.24, cooldown: 400, comboWindow: 2000 },
+            hard:   { speedMin: 0.10, speedIdeal: 0.18, extensionMin: 0.30, cooldown: 300, comboWindow: 1500 }
+        };
+
+        // Plafond de vitesse realiste (au dessus = artefact de tracking, on ignore)
+        const MAX_REALISTIC_SPEED = 0.35;
+        // Minimum de frames a accumuler avant de valider un coup
+        const MIN_MOTION_FRAMES = 2;
+        // Seuil pour considerer que la personne est debout (ratio hanches/epaules)
+        const STANDING_THRESHOLD = 0.15;
+
+        // ===== STATE =====
+        let state = {
+            started: false,
+            paused: false,
+            difficulty: 'normal',
+            totalRounds: 3,
+            currentRound: 1,
+            roundTime: 180,
+            restTime: 60,
+            timeLeft: 180,
+            isResting: false,
+            punchCount: 0,
+            combo: 0,
+            maxCombo: 0,
+            lastPunchTime: 0,
+            comboTimeout: null,
+            scores: [],
+            speeds: [],
+            techniques: { jab: 0, cross: 0, crochet: 0, uppercut: 0 },
+            defenseCount: 0,
+            isDefending: false,
+            isStanding: false,
+            history: [],
+            sessionStart: null,
+            // Historique de positions pour lissage (3 frames)
+            rightWristHistory: [],
+            leftWristHistory: [],
+            // Phase de mouvement: idle, winding, extending, retracting
+            rightArmPhase: 'idle',
+            leftArmPhase: 'idle',
+            // Position de reference au repos
+            rightRestPos: null,
+            leftRestPos: null,
+            // Peak tracking pour un coup en cours
+            rightPeakSpeed: 0,
+            leftPeakSpeed: 0,
+            rightPeakExtension: 0,
+            leftPeakExtension: 0,
+            rightMotionFrames: 0,
+            leftMotionFrames: 0,
+            timerInterval: null,
+            frameTimestamp: 0,
+            lastFrameTime: 0,
+            fps: 30
+        };
+
+        // ===== DOM ELEMENTS =====
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Start screen
+        const startScreen = document.getElementById('start-screen');
+        const startBtn = document.getElementById('start-btn');
+
+        // HUD
+        const hudTop = document.getElementById('hud-top');
+        const hudBottom = document.getElementById('hud-bottom');
+        const currentTechnique = document.getElementById('current-technique');
+        const currentSpeed = document.getElementById('current-speed');
+        const currentExtension = document.getElementById('current-extension');
+        const currentForce = document.getElementById('current-force');
+        const totalPunches = document.getElementById('total-punches');
+        const postureStatus = document.getElementById('posture-status');
+        const timerEl = document.getElementById('timer');
+        const roundLabel = document.getElementById('round-label');
+        const comboCount = document.getElementById('combo-count');
+        const comboFill = document.getElementById('combo-fill');
+        const techniqueDisplay = document.getElementById('technique-display');
+        const techniqueName = document.getElementById('technique-name');
+        const techniqueScore = document.getElementById('technique-score');
+        const defenseIndicator = document.getElementById('defense-indicator');
+        const historyPanel = document.getElementById('history-panel');
+        const pauseOverlay = document.getElementById('pause-overlay');
+
+        // End screen
+        const endScreen = document.getElementById('end-screen');
+
+        // ===== AUDIO SYSTEM (Web Audio API) =====
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playBell(times = 1) {
+            // Son de cloche de boxe synthetique
+            for (let i = 0; i < times; i++) {
+                setTimeout(() => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.5);
+
+                    gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.8);
+                }, i * 300);
+            }
+        }
+
+        function playBeep() {
+            // Court beep pour les 10 dernieres secondes
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'square';
+            osc.frequency.value = 600;
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.15);
+        }
+
+        function playComboSuccess() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+            osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.4);
+        }
+
+        // ===== COMBO SEQUENCES =====
+        const COMBO_SEQUENCES = [
+            { name: 'JAB - CROSS', seq: ['JAB', 'CROSS'] },
+            { name: 'JAB - JAB - CROSS', seq: ['JAB', 'JAB', 'CROSS'] },
+            { name: 'JAB - CROSS - CROCHET', seq: ['JAB', 'CROSS', 'CROCHET'] },
+            { name: 'JAB - CROSS - UPPERCUT', seq: ['JAB', 'CROSS', 'UPPERCUT'] },
+            { name: 'JAB - JAB', seq: ['JAB', 'JAB'] },
+            { name: 'CROSS - CROCHET', seq: ['CROSS', 'CROCHET'] },
+            { name: 'CROCHET - CROSS', seq: ['CROCHET', 'CROSS'] },
+            { name: 'UPPERCUT - CROSS', seq: ['UPPERCUT', 'CROSS'] },
+            { name: 'JAB - UPPERCUT', seq: ['JAB', 'UPPERCUT'] },
+            { name: 'JAB - CROSS - CROCHET - CROSS', seq: ['JAB', 'CROSS', 'CROCHET', 'CROSS'] },
+        ];
+
+        let comboState = {
+            active: false,
+            currentSeq: null,
+            currentIndex: 0,
+            timeout: null,
+            completed: 0,
+            missed: 0
+        };
+
+        const comboCallerEl = document.getElementById('combo-caller');
+        const comboCallerText = document.getElementById('combo-caller-text');
+        const comboCallerSub = document.getElementById('combo-caller-sub');
+
+        function callNewCombo() {
+            if (!state.started || state.paused || state.mode !== 'combo') return;
+
+            const seq = COMBO_SEQUENCES[Math.floor(Math.random() * COMBO_SEQUENCES.length)];
+            comboState.currentSeq = seq;
+            comboState.currentIndex = 0;
+
+            updateComboDisplay();
+            comboCallerEl.classList.add('visible');
+
+            // Timeout: si pas complete en 5 secondes = miss
+            clearTimeout(comboState.timeout);
+            comboState.timeout = setTimeout(() => {
+                comboState.missed++;
+                comboCallerSub.textContent = 'RATÉ !';
+                comboCallerSub.className = 'combo-miss';
+                setTimeout(() => callNewCombo(), 1500);
+            }, 6000);
+        }
+
+        function updateComboDisplay() {
+            if (!comboState.currentSeq) return;
+            const seq = comboState.currentSeq.seq;
+            let display = '';
+            for (let i = 0; i < seq.length; i++) {
+                if (i < comboState.currentIndex) {
+                    display += `<span style="color:#00ff88;">✓</span> `;
+                } else if (i === comboState.currentIndex) {
+                    display += `<span style="color:#fff;text-decoration:underline;">${seq[i]}</span> `;
+                } else {
+                    display += `<span style="color:#666;">${seq[i]}</span> `;
+                }
+                if (i < seq.length - 1) display += '→ ';
+            }
+            comboCallerText.innerHTML = display;
+            comboCallerSub.textContent = `${comboState.currentIndex}/${seq.length}`;
+            comboCallerSub.className = '';
+        }
+
+        function checkComboInput(technique) {
+            if (!comboState.currentSeq || state.mode !== 'combo') return;
+
+            const expected = comboState.currentSeq.seq[comboState.currentIndex];
+            // Normaliser: "JAB", "CROSS", "CROCHET G" -> "CROCHET", "UPPERCUT D" -> "UPPERCUT"
+            const techNorm = technique.replace(/ [GD]$/, '');
+
+            if (techNorm === expected) {
+                comboState.currentIndex++;
+                updateComboDisplay();
+
+                if (comboState.currentIndex >= comboState.currentSeq.seq.length) {
+                    // Combo complete !
+                    clearTimeout(comboState.timeout);
+                    comboState.completed++;
+                    comboCallerSub.textContent = 'COMBO RÉUSSI !';
+                    comboCallerSub.className = 'combo-check';
+                    playComboSuccess();
+                    setTimeout(() => callNewCombo(), 2000);
+                }
+            }
+        }
+
+        // ===== SELECTION ECRAN START =====
+        // Durée du round
+        document.querySelectorAll('.round-btn[data-time]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.round-btn[data-time]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.roundTime = parseInt(btn.dataset.time);
+            });
+        });
+
+        // Nombre de rounds
+        document.querySelectorAll('.round-btn[data-rounds]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.round-btn[data-rounds]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.totalRounds = parseInt(btn.dataset.rounds);
+            });
+        });
+
+        // Mode
+        document.querySelectorAll('.diff-btn[data-mode]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.diff-btn[data-mode]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.mode = btn.dataset.mode;
+            });
+        });
+
+        // Difficulte
+        document.querySelectorAll('.diff-btn[data-diff]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.diff-btn[data-diff]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.difficulty = btn.dataset.diff;
+            });
+        });
+
+        // ===== START =====
+        startBtn.addEventListener('click', startSession);
+
+        function startSession() {
+            // Resume AudioContext si bloque par le navigateur
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            state.started = true;
+            state.sessionStart = Date.now();
+            state.currentRound = 1;
+            state.timeLeft = state.roundTime;
+            state.isResting = false;
+            state.punchCount = 0;
+            state.combo = 0;
+            state.maxCombo = 0;
+            state.scores = [];
+            state.speeds = [];
+            state.techniques = { jab: 0, cross: 0, crochet: 0, uppercut: 0 };
+            state.defenseCount = 0;
+            state.history = [];
+            state.paused = false;
+            state.rightWristHistory = [];
+            state.leftWristHistory = [];
+            state.rightArmPhase = 'idle';
+            state.leftArmPhase = 'idle';
+
+            comboState = { active: false, currentSeq: null, currentIndex: 0, timeout: null, completed: 0, missed: 0 };
+
+            startScreen.classList.add('hidden');
+            hudTop.style.display = 'flex';
+            hudBottom.style.display = 'flex';
+            document.getElementById('control-buttons').classList.add('visible');
+            endScreen.classList.remove('visible');
+            pauseOverlay.classList.remove('visible');
+
+            updateRoundLabel();
+
+            // Cloche de debut
+            playBell(1);
+            startTimer();
+
+            // Mode combo: lancer le premier combo apres 3 secondes
+            if (state.mode === 'combo') {
+                setTimeout(() => callNewCombo(), 3000);
+            }
+        }
+
+        // ===== TIMER =====
+        function startTimer() {
+            clearInterval(state.timerInterval);
+            state.timerInterval = setInterval(() => {
+                if (state.paused) return;
+
+                state.timeLeft--;
+
+                // Beep 10 dernières secondes
+                if (state.timeLeft <= 10 && state.timeLeft > 0 && !state.isResting) {
+                    playBeep();
+                }
+
+                if (state.timeLeft <= 0) {
+                    if (state.isResting) {
+                        // Fin du repos, round suivant
+                        state.currentRound++;
+                        state.isResting = false;
+                        state.timeLeft = state.roundTime;
+                        updateRoundLabel();
+                        playBell(1); // Cloche debut round
+                        if (state.mode === 'combo') {
+                            setTimeout(() => callNewCombo(), 2000);
+                        }
+                    } else if (state.currentRound >= state.totalRounds) {
+                        // Fin de la session
+                        playBell(3); // Triple cloche fin
+                        endSession();
+                        return;
+                    } else {
+                        // Repos entre rounds
+                        playBell(2); // Double cloche fin de round
+                        state.isResting = true;
+                        state.timeLeft = state.restTime;
+                        roundLabel.textContent = 'REPOS';
+                        comboCallerEl.classList.remove('visible');
+                    }
+                }
+
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(state.timeLeft / 60);
+            const secs = state.timeLeft % 60;
+            timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+            timerEl.className = '';
+            if (state.timeLeft <= 10 && !state.isResting) {
+                timerEl.classList.add('danger');
+            } else if (state.timeLeft <= 30 && !state.isResting) {
+                timerEl.classList.add('warning');
+            }
+        }
+
+        function updateRoundLabel() {
+            roundLabel.textContent = `ROUND ${state.currentRound} / ${state.totalRounds}`;
+        }
+
+        // ===== PAUSE / STOP CONTROLS =====
+        function togglePause() {
+            if (!state.started) return;
+            state.paused = !state.paused;
+            pauseOverlay.classList.toggle('visible', state.paused);
+        }
+
+        function stopSession() {
+            state.paused = false;
+            pauseOverlay.classList.remove('visible');
+            playBell(3);
+            endSession();
+        }
+
+        // Keyboard
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && state.started) {
+                e.preventDefault();
+                togglePause();
+            }
+            if (e.code === 'Escape' && state.started) {
+                e.preventDefault();
+                stopSession();
+            }
+        });
+
+        // Boutons
+        document.getElementById('btn-pause').addEventListener('click', togglePause);
+        document.getElementById('btn-stop').addEventListener('click', stopSession);
+        document.getElementById('btn-resume').addEventListener('click', togglePause);
+        document.getElementById('btn-end-session').addEventListener('click', stopSession);
+
+        // ===== MEDIAPIPE POSE =====
+        const pose = new Pose({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        });
+
+        pose.setOptions({
+            modelComplexity: 1,
+            smoothLandmarks: true,
+            enableSegmentation: false,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        pose.onResults(onResults);
+
+        function onResults(results) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (results.poseLandmarks) {
+                // Squelette
+                drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
+                    color: 'rgba(0, 255, 136, 0.6)', lineWidth: 3
+                });
+                drawLandmarks(ctx, results.poseLandmarks, {
+                    color: 'rgba(0, 204, 255, 0.8)', lineWidth: 2, radius: 5
+                });
+
+                if (state.started && !state.paused && !state.isResting) {
+                    analyzeMovement(results.poseLandmarks);
+                }
+            }
+
+            ctx.restore();
+        }
+
+        // ===== UTILITAIRES =====
+        function getAngle(a, b, c) {
+            const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+            let angle = Math.abs(radians * 180.0 / Math.PI);
+            if (angle > 180) angle = 360 - angle;
+            return angle;
+        }
+
+        function dist2D(a, b) {
+            return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+        }
+
+        function smoothPosition(history) {
+            // Moyenne ponderee des 3 dernieres positions (plus recent = plus de poids)
+            if (history.length === 0) return null;
+            if (history.length === 1) return history[0];
+            const weights = [0.2, 0.3, 0.5];
+            const len = Math.min(history.length, 3);
+            let sx = 0, sy = 0, sw = 0;
+            for (let i = 0; i < len; i++) {
+                const w = weights[3 - len + i];
+                const p = history[history.length - len + i];
+                sx += p.x * w;
+                sy += p.y * w;
+                sw += w;
+            }
+            return { x: sx / sw, y: sy / sw };
+        }
+
+        // Convertit vitesse normalisee en m/s approximatif pour affichage
+        // Basé sur : distance bras ~0.6m, espace normalise epaule-poignet ~0.3
+        // Donc 1 unite norm ≈ 2m. A 30fps, vitesse_ms = speed_norm * 2 * fps
+        function normSpeedToMs(normSpeed) {
+            return normSpeed * 2 * state.fps;
+        }
+
+        // ===== DETECTION POSTURE DEBOUT =====
+        function checkStanding(landmarks) {
+            // Compare position Y des hanches vs epaules
+            // Si les hanches sont trop hautes (proches de la tete) ou trop proches des epaules = assis
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+            const nose = landmarks[0];
+
+            const hipY = (leftHip.y + rightHip.y) / 2;
+            const shoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+            const noseY = nose.y;
+
+            // Distance torse (epaules -> hanches) en proportion du corps
+            const torsoLength = hipY - shoulderY;
+            // Distance tete -> hanches
+            const fullLength = hipY - noseY;
+
+            // Si torse < 15% de la hauteur totale visible OU hanches pas visibles en bas
+            // Alors probablement assis ou trop pres
+            const isStanding = torsoLength > STANDING_THRESHOLD && fullLength > 0.25;
+
+            if (state.isStanding !== isStanding) {
+                state.isStanding = isStanding;
+                if (isStanding) {
+                    postureStatus.textContent = 'DEBOUT';
+                    postureStatus.style.color = '#00ff88';
+                } else {
+                    postureStatus.textContent = 'ASSIS';
+                    postureStatus.style.color = '#ff4444';
+                }
+            }
+
+            return isStanding;
+        }
+
+        // ===== ANALYSE DES MOUVEMENTS (v2.1 REALISTE) =====
+        function analyzeMovement(landmarks) {
+            const now = Date.now();
+            const config = CONFIG[state.difficulty];
+
+            // Calcul FPS reel
+            if (state.lastFrameTime > 0) {
+                const dt = now - state.lastFrameTime;
+                if (dt > 0) state.fps = Math.min(1000 / dt, 60);
+            }
+            state.lastFrameTime = now;
+
+            // Points cles
+            const rightShoulder = landmarks[12];
+            const rightElbow = landmarks[14];
+            const rightWrist = landmarks[16];
+            const leftShoulder = landmarks[11];
+            const leftElbow = landmarks[13];
+            const leftWrist = landmarks[15];
+            const nose = landmarks[0];
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+
+            // 1) CHECK POSTURE - si pas debout, on ignore tout
+            const standing = checkStanding(landmarks);
+            if (!standing) {
+                // Reset phases
+                state.rightArmPhase = 'idle';
+                state.leftArmPhase = 'idle';
+                state.rightMotionFrames = 0;
+                state.leftMotionFrames = 0;
+                currentSpeed.textContent = '---';
+                currentSpeed.style.color = '#555';
+                currentExtension.textContent = '---';
+                currentTechnique.textContent = 'LEVE-TOI';
+                currentTechnique.style.color = '#ff4444';
+                return;
+            }
+            currentTechnique.style.color = '';
+
+            // 2) Detection defense
+            detectDefense(leftWrist, rightWrist, nose, leftShoulder, rightShoulder);
+
+            // 3) Stocker positions avec lissage
+            state.rightWristHistory.push({ x: rightWrist.x, y: rightWrist.y, t: now });
+            state.leftWristHistory.push({ x: leftWrist.x, y: leftWrist.y, t: now });
+            // Garder max 5 frames
+            if (state.rightWristHistory.length > 5) state.rightWristHistory.shift();
+            if (state.leftWristHistory.length > 5) state.leftWristHistory.shift();
+
+            // Position lissee actuelle
+            const rightSmooth = smoothPosition(state.rightWristHistory);
+            const leftSmooth = smoothPosition(state.leftWristHistory);
+
+            // 4) Calculer vitesse lissee (entre frame N-2 et frame N)
+            let rightSpeed = 0, leftSpeed = 0;
+            let rightDirX = 0, rightDirY = 0, leftDirX = 0, leftDirY = 0;
+
+            if (state.rightWristHistory.length >= 3) {
+                const prev = state.rightWristHistory[state.rightWristHistory.length - 3];
+                rightDirX = rightSmooth.x - prev.x;
+                rightDirY = rightSmooth.y - prev.y;
+                rightSpeed = Math.sqrt(rightDirX ** 2 + rightDirY ** 2);
+            }
+
+            if (state.leftWristHistory.length >= 3) {
+                const prev = state.leftWristHistory[state.leftWristHistory.length - 3];
+                leftDirX = leftSmooth.x - prev.x;
+                leftDirY = leftSmooth.y - prev.y;
+                leftSpeed = Math.sqrt(leftDirX ** 2 + leftDirY ** 2);
+            }
+
+            // 5) FILTRAGE ARTEFACTS - si vitesse trop haute = tracking perdu, on ignore
+            if (rightSpeed > MAX_REALISTIC_SPEED) rightSpeed = 0;
+            if (leftSpeed > MAX_REALISTIC_SPEED) leftSpeed = 0;
+
+            // 6) Extensions
+            const rightExtH = Math.abs(rightWrist.x - rightShoulder.x);
+            const leftExtH = Math.abs(leftWrist.x - leftShoulder.x);
+
+            // Angles coudes
+            const rightElbowAngle = getAngle(rightShoulder, rightElbow, rightWrist);
+            const leftElbowAngle = getAngle(leftShoulder, leftElbow, leftWrist);
+
+            // 7) MACHINE A ETATS pour chaque bras
+            // On track l'acceleration (phase extending) puis la deceleration (phase retracting)
+            // Un coup est valide quand: extending -> peak -> retracting
+            processArm('right', rightSpeed, rightExtH, rightElbowAngle, rightDirX, rightDirY, rightWrist, rightShoulder, now, config);
+            processArm('left', leftSpeed, leftExtH, leftElbowAngle, leftDirX, leftDirY, leftWrist, leftShoulder, now, config);
+
+            // 8) MAJ HUD
+            const maxExt = Math.max(rightExtH, leftExtH);
+            const maxSpeed = Math.max(rightSpeed, leftSpeed);
+            const displaySpeed = normSpeedToMs(maxSpeed);
+            currentExtension.textContent = `${(maxExt * 100).toFixed(0)}%`;
+            currentSpeed.textContent = `${displaySpeed.toFixed(1)} m/s`;
+            currentSpeed.style.color = displaySpeed < 2 ? '#ff4444' : displaySpeed < 6 ? '#ffcc00' : '#00ff88';
+        }
+
+        // ===== MACHINE A ETATS PAR BRAS =====
+        function processArm(side, speed, extH, elbowAngle, dirX, dirY, wrist, shoulder, now, config) {
+            const phaseKey = side + 'ArmPhase';
+            const peakSpeedKey = side + 'PeakSpeed';
+            const peakExtKey = side + 'PeakExtension';
+            const motionKey = side + 'MotionFrames';
+
+            const phase = state[phaseKey];
+            const isMoving = speed > config.speedMin;
+
+            if (phase === 'idle') {
+                if (isMoving && speed < MAX_REALISTIC_SPEED) {
+                    // Debut de mouvement
+                    state[phaseKey] = 'extending';
+                    state[peakSpeedKey] = speed;
+                    state[peakExtKey] = extH;
+                    state[motionKey] = 1;
+                }
+            }
+            else if (phase === 'extending') {
+                if (isMoving && speed < MAX_REALISTIC_SPEED) {
+                    // Toujours en mouvement, tracker les peaks
+                    state[motionKey]++;
+                    if (speed > state[peakSpeedKey]) state[peakSpeedKey] = speed;
+                    if (extH > state[peakExtKey]) state[peakExtKey] = extH;
+                }
+                else {
+                    // Mouvement ralenti ou arrete = fin du coup potentiel
+                    state[phaseKey] = 'retracting';
+                }
+            }
+            else if (phase === 'retracting') {
+                // Valider le coup si les criteres sont remplis
+                const peakSpeed = state[peakSpeedKey];
+                const peakExt = state[peakExtKey];
+                const frames = state[motionKey];
+
+                const validSpeed = peakSpeed >= config.speedMin * 1.5;
+                const validExtension = peakExt >= config.extensionMin * 0.7;
+                const validFrames = frames >= MIN_MOTION_FRAMES;
+                const validCooldown = now - state.lastPunchTime > config.cooldown;
+
+                if (validSpeed && validExtension && validFrames && validCooldown) {
+                    // Classifier le coup
+                    const technique = classifyTechnique(peakExt, elbowAngle, dirX, dirY, peakSpeed, side, config);
+                    if (technique) {
+                        const displaySpeed = normSpeedToMs(peakSpeed);
+                        registerPunch(technique, peakExt, displaySpeed, now);
+                    }
+                }
+
+                // Reset
+                state[phaseKey] = 'idle';
+                state[peakSpeedKey] = 0;
+                state[peakExtKey] = 0;
+                state[motionKey] = 0;
+            }
+        }
+
+        // ===== CLASSIFICATION DES TECHNIQUES (v2.1) =====
+        function classifyTechnique(extH, elbowAngle, dirX, dirY, speed, side, config) {
+            // Normaliser direction
+            const dirMag = Math.sqrt(dirX ** 2 + dirY ** 2);
+            const nDirX = dirMag > 0 ? dirX / dirMag : 0;
+            const nDirY = dirMag > 0 ? dirY / dirMag : 0;
+
+            // UPPERCUT: mouvement principalement vers le HAUT (dirY tres negatif)
+            // + coude plie (< 110 degres)
+            if (nDirY < -0.6 && elbowAngle < 115) {
+                return side === 'left' ? 'UPPERCUT G' : 'UPPERCUT D';
+            }
+
+            // CROCHET: mouvement LATERAL dominant + coude bien plie (< 130)
+            // Le crochet a un arc: mouvement horizontal avec bras courbe
+            if (Math.abs(nDirX) > 0.6 && elbowAngle < 135 && elbowAngle > 60) {
+                return side === 'left' ? 'CROCHET G' : 'CROCHET D';
+            }
+
+            // JAB: bras AVANT (gauche pour droitier), extension large, bras tendu
+            // CROSS: bras ARRIERE (droit pour droitier), plus puissant
+            if (extH >= config.extensionMin && elbowAngle > 125) {
+                // Distinguer jab vs cross par la vitesse et l'extension
+                // Le cross est generalement plus puissant
+                if (side === 'left') return 'JAB';
+                return 'CROSS';
+            }
+
+            // Si extension moyenne mais bras pas completement tendu
+            if (extH >= config.extensionMin * 0.6 && elbowAngle > 100) {
+                if (side === 'left') return 'JAB';
+                return 'CROSS';
+            }
+
+            // Pas assez de criteres pour classifier
+            return null;
+        }
+
+        // ===== DEFENSE DETECTION (amelioree) =====
+        function detectDefense(leftW, rightW, nose, leftS, rightS) {
+            // Les DEUX mains doivent etre hautes et pres du visage
+            const leftNearFace = Math.abs(leftW.x - nose.x) < 0.12 && Math.abs(leftW.y - nose.y) < 0.15;
+            const rightNearFace = Math.abs(rightW.x - nose.x) < 0.12 && Math.abs(rightW.y - nose.y) < 0.15;
+            const leftHandUp = leftW.y < leftS.y;
+            const rightHandUp = rightW.y < rightS.y;
+
+            // Garde haute = DEUX mains en position + au dessus des epaules
+            const defending = leftNearFace && rightNearFace && leftHandUp && rightHandUp;
+
+            if (defending && !state.isDefending) {
+                state.defenseCount++;
+                state.isDefending = true;
+                defenseIndicator.classList.add('visible');
+                document.getElementById('defense-text').textContent = '🛡 GARDE HAUTE';
+            } else if (!defending && state.isDefending) {
+                state.isDefending = false;
+                defenseIndicator.classList.remove('visible');
+            }
+        }
+
+        // ===== ENREGISTRER UN COUP (v2.1 scoring realiste) =====
+        function registerPunch(technique, extension, speedMs, now) {
+            state.punchCount++;
+            state.lastPunchTime = now;
+
+            const config = CONFIG[state.difficulty];
+
+            // Score realiste base sur:
+            // - Extension du bras (40%): 0.15 = faible, 0.35+ = excellent
+            // - Vitesse en m/s (40%): 2 = faible, 8+ = excellent
+            // - Technique bonus (20%): coude correct = bonus
+            const extNorm = Math.min(Math.max((extension - 0.10) / 0.30, 0), 1); // 0.10->0, 0.40->1
+            const spdNorm = Math.min(Math.max((speedMs - 1) / 10, 0), 1);         // 1->0, 11->1
+            const extScore = extNorm * 100;
+            const spdScore = spdNorm * 100;
+            const score = Math.round(extScore * 0.4 + spdScore * 0.4 + 20); // 20 points de base pour technique detectee
+
+            // Cap a 100
+            const finalScore = Math.min(score, 100);
+
+            state.scores.push(finalScore);
+            state.speeds.push(speedMs);
+
+            // Force estimee (combine vitesse + extension)
+            // Echelle: Faible < 3, Moyen 3-6, Fort 6-9, Devastateur 9+
+            const forceEstimate = speedMs * 0.7 + (extension * 10) * 0.3;
+            if (forceEstimate >= 9) {
+                currentForce.textContent = 'DEVASTATEUR';
+                currentForce.style.color = '#ff0066';
+            } else if (forceEstimate >= 6) {
+                currentForce.textContent = 'FORT';
+                currentForce.style.color = '#00ff88';
+            } else if (forceEstimate >= 3) {
+                currentForce.textContent = 'MOYEN';
+                currentForce.style.color = '#ffcc00';
+            } else {
+                currentForce.textContent = 'FAIBLE';
+                currentForce.style.color = '#ff4444';
+            }
+
+            // Technique mapping
+            const techKey = technique.toLowerCase().replace(/ [gd]$/, '').replace('é', 'e');
+            if (techKey === 'jab') state.techniques.jab++;
+            else if (techKey === 'cross') state.techniques.cross++;
+            else if (techKey === 'crochet') state.techniques.crochet++;
+            else if (techKey === 'uppercut') state.techniques.uppercut++;
+
+            // Combo
+            state.combo++;
+            if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+
+            clearTimeout(state.comboTimeout);
+            state.comboTimeout = setTimeout(() => {
+                state.combo = 0;
+                comboCount.textContent = '0';
+                comboFill.style.width = '0%';
+            }, config.comboWindow);
+
+            // Update HUD
+            currentTechnique.textContent = technique;
+            totalPunches.textContent = state.punchCount;
+            comboCount.textContent = state.combo;
+            comboFill.style.width = `${Math.min(state.combo * 10, 100)}%`;
+
+            // Technique display
+            techniqueName.textContent = technique;
+            if (finalScore >= 75) {
+                techniqueScore.textContent = `${finalScore}/100 EXCELLENT`;
+                techniqueScore.className = 'score-excellent';
+            } else if (finalScore >= 50) {
+                techniqueScore.textContent = `${finalScore}/100 BON`;
+                techniqueScore.className = 'score-good';
+            } else {
+                techniqueScore.textContent = `${finalScore}/100 FAIBLE`;
+                techniqueScore.className = 'score-weak';
+            }
+
+            techniqueDisplay.classList.add('visible');
+            setTimeout(() => techniqueDisplay.classList.remove('visible'), 600);
+
+            // History bar
+            addHistoryBar(finalScore);
+
+            // Log
+            state.history.push({
+                time: now - state.sessionStart,
+                technique,
+                score: finalScore,
+                speed: parseFloat(speedMs.toFixed(1)),
+                round: state.currentRound
+            });
+        }
+
+        // ===== HISTORY BARS =====
+        function addHistoryBar(score) {
+            const bar = document.createElement('div');
+            bar.className = 'history-bar';
+            const height = Math.max(10, score * 0.6);
+            bar.style.height = `${height}px`;
+
+            if (score >= 75) bar.style.background = '#00ff88';
+            else if (score >= 50) bar.style.background = '#ffcc00';
+            else bar.style.background = '#ff4444';
+
+            historyPanel.appendChild(bar);
+
+            // Garder max 50 barres
+            while (historyPanel.children.length > 50) {
+                historyPanel.removeChild(historyPanel.firstChild);
+            }
+        }
+
+        // ===== FIN DE SESSION =====
+        function endSession() {
+            clearInterval(state.timerInterval);
+            state.started = false;
+
+            const duration = Math.round((Date.now() - state.sessionStart) / 1000);
+            const avgScore = state.scores.length > 0
+                ? Math.round(state.scores.reduce((a, b) => a + b, 0) / state.scores.length)
+                : 0;
+            const bestSpeed = state.speeds.length > 0
+                ? Math.max(...state.speeds).toFixed(1)
+                : '0.0';
+            const bestScore = state.scores.length > 0
+                ? Math.max(...state.scores)
+                : 0;
+
+            // Fill end screen
+            document.getElementById('end-duration').textContent =
+                `${Math.floor(duration / 60)}min ${duration % 60}s - ${state.totalRounds} rounds`;
+            document.getElementById('end-total').textContent = state.punchCount;
+            document.getElementById('end-avg-score').textContent = avgScore;
+            document.getElementById('end-max-combo').textContent = state.maxCombo;
+            document.getElementById('end-best-speed').textContent = `${bestSpeed} m/s`;
+            document.getElementById('end-best-score').textContent = bestScore;
+            document.getElementById('end-defense').textContent = state.defenseCount;
+
+            // Techniques breakdown
+            const techContainer = document.getElementById('end-techniques');
+            techContainer.innerHTML = '';
+            for (const [name, count] of Object.entries(state.techniques)) {
+                if (count > 0) {
+                    const el = document.createElement('div');
+                    el.className = 'end-tech';
+                    el.innerHTML = `
+                        <div class="end-tech-count">${count}</div>
+                        <div class="end-tech-name">${name.toUpperCase()}</div>
+                    `;
+                    techContainer.appendChild(el);
+                }
+            }
+
+            hudTop.style.display = 'none';
+            hudBottom.style.display = 'none';
+            endScreen.classList.add('visible');
+        }
+
+        // ===== RESTART =====
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            endScreen.classList.remove('visible');
+            historyPanel.innerHTML = '';
+            startSession();
+        });
+
+        // ===== EXPORT =====
+        document.getElementById('export-btn').addEventListener('click', exportSession);
+
+        function exportSession() {
+            const duration = Math.round((Date.now() - state.sessionStart) / 1000);
+            const avgScore = state.scores.length > 0
+                ? Math.round(state.scores.reduce((a, b) => a + b, 0) / state.scores.length)
+                : 0;
+
+            const data = {
+                app: 'Combat.AI v2',
+                date: new Date().toISOString(),
+                duration_seconds: duration,
+                rounds: state.totalRounds,
+                difficulty: state.difficulty,
+                total_punches: state.punchCount,
+                avg_score: avgScore,
+                max_combo: state.maxCombo,
+                best_speed: state.speeds.length > 0 ? Math.max(...state.speeds).toFixed(1) : 0,
+                best_score: state.scores.length > 0 ? Math.max(...state.scores) : 0,
+                defense_count: state.defenseCount,
+                techniques: state.techniques,
+                history: state.history
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `combat-ai-session-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ===== CAMERA (adaptatif mobile/desktop) =====
+        const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+        const camWidth = isMobile ? 640 : 1280;
+        const camHeight = isMobile ? 480 : 720;
+
+        // Sur mobile: camera arriere par defaut, mais on utilise la frontale
+        const cameraConfig = {
+            onFrame: async () => {
+                await pose.send({ image: video });
+            },
+            width: camWidth,
+            height: camHeight
+        };
+
+        // Forcer camera frontale sur mobile
+        if (isMobile) {
+            cameraConfig.facingMode = 'user';
+        }
+
+        const camera = new Camera(video, cameraConfig);
+
+        camera.start().then(() => {
+            console.log(`Combat.AI v2.1 initialized (${isMobile ? 'mobile' : 'desktop'} ${camWidth}x${camHeight})`);
+        }).catch(err => {
+            console.error('Camera error:', err);
+            document.getElementById('status') && (document.getElementById('status').textContent = 'ERREUR CAMERA');
+        });
+    </script>
+</body>
+</html>

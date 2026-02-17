@@ -1,0 +1,70 @@
+{
+  "app": "Combat.AI v2",
+  "date": "2026-02-17T20:24:18.220Z",
+  "duration_seconds": 365,
+  "rounds": 1,
+  "difficulty": "easy",
+  "total_punches": 7,
+  "avg_score": 54,
+  "max_combo": 3,
+  "best_speed": "13.5",
+  "best_score": 64,
+  "defense_count": 20,
+  "techniques": {
+    "jab": 1,
+    "cross": 3,
+    "crochet": 0,
+    "uppercut": 3
+  },
+  "history": [
+    {
+      "time": 14857,
+      "technique": "UPPERCUT G",
+      "score": 54,
+      "speed": 8.2,
+      "round": 1
+    },
+    {
+      "time": 23261,
+      "technique": "UPPERCUT G",
+      "score": 49,
+      "speed": 7.1,
+      "round": 1
+    },
+    {
+      "time": 24244,
+      "technique": "CROSS",
+      "score": 52,
+      "speed": 6.9,
+      "round": 1
+    },
+    {
+      "time": 25712,
+      "technique": "JAB",
+      "score": 64,
+      "speed": 13.5,
+      "round": 1
+    },
+    {
+      "time": 37724,
+      "technique": "CROSS",
+      "score": 63,
+      "speed": 8,
+      "round": 1
+    },
+    {
+      "time": 38389,
+      "technique": "CROSS",
+      "score": 51,
+      "speed": 3.3,
+      "round": 1
+    },
+    {
+      "time": 39589,
+      "technique": "UPPERCUT D",
+      "score": 44,
+      "speed": 5.1,
+      "round": 1
+    }
+  ]
+}
