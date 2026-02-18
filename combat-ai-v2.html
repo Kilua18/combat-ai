@@ -1325,25 +1325,27 @@
                 rightKnee.visibility || 0
             );
 
-            // CRITERES POUR ETRE DEBOUT :
-            // 1) Torse suffisamment long (epaules-hanches > 15%)
-            // 2) Corps assez visible (nez-hanches > 25%)
-            // 3) NOUVEAU: Genoux visibles ET bien en dessous des hanches
-            //    - legLength > 0.10 = les genoux sont au moins 10% plus bas que les hanches
-            //    - OU les genoux ne sont pas visibles (hors cadre = probablement debout et cadre serre)
-            //      mais SEULEMENT si le torse est vraiment long (> 0.25) pour eviter les faux positifs assis
+            // CRITERES POUR ETRE DEBOUT (v2.3 - adapte cadrage tronc) :
+            // Cas 1: Genoux visibles -> on verifie qu'ils sont bien en dessous des hanches
+            // Cas 2: Genoux hors cadre -> on check si les hanches sont en bas de l'image
+            //        (debout cadre serre = hanches pres du bord bas, assis = hanches au milieu)
             const kneesVisible = kneeVisibility > 0.5;
             const kneesBelow = legLength > 0.10;
             const torsoCheck = torsoLength > STANDING_THRESHOLD && fullLength > 0.25;
+            const hipsNearBottom = hipY > 0.70; // hanches dans le quart bas = debout cadre serre
 
             let isStanding;
             if (kneesVisible) {
                 // Genoux visibles : on verifie qu'ils sont bien en dessous des hanches
                 isStanding = torsoCheck && kneesBelow;
+            } else if (hipsNearBottom) {
+                // Genoux hors cadre MAIS hanches en bas de l'image = debout, cadrage tronc
+                // On garde le check torse standard (pas besoin d'etre plus strict)
+                isStanding = torsoCheck;
             } else {
-                // Genoux pas visibles (cadre serre) : on demande un torse plus long
-                // pour eviter que quelqu'un assis avec les genoux hors cadre passe le check
-                isStanding = torsoLength > 0.25 && fullLength > 0.35;
+                // Genoux hors cadre ET hanches au milieu de l'image = probablement assis
+                // (assis = la camera voit le torse au centre, pas en bas)
+                isStanding = false;
             }
 
             if (state.isStanding !== isStanding) {
