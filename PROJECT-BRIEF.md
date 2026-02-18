@@ -11,6 +11,7 @@
 **Nom:** Combat.AI
 **Createur:** Norman Nonnon -- combattant MMA (2 victoires 2024), futur coach BPJEPS (mars 2026), developpeur autodidacte
 **Concept:** Application web de coaching boxe/MMA par computer vision, 100% navigateur
+**Machine de dev:** HP Pavilion (laptop) -- PAS sur Raspberry Pi. Le Pi 5 + Hailo est pour le projet Phoenix (trading bot).
 **Stack:** HTML/CSS/JS vanilla + MediaPipe Pose (CDN) + Python (tooling)
 **Status:** V2 fonctionnelle, UI prete, algorithme a calibrer
 
