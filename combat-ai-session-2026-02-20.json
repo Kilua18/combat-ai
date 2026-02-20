@@ -1,0 +1,42 @@
+{
+  "app": "Combat.AI v2",
+  "date": "2026-02-20T14:38:45.838Z",
+  "duration_seconds": 76,
+  "rounds": 1,
+  "difficulty": "easy",
+  "total_punches": 3,
+  "avg_score": 43,
+  "max_combo": 1,
+  "best_speed": "4.6",
+  "best_score": 54,
+  "defense_count": 4,
+  "techniques": {
+    "jab": 2,
+    "cross": 1,
+    "crochet": 0,
+    "uppercut": 0
+  },
+  "history": [
+    {
+      "time": 1822,
+      "technique": "CROSS",
+      "score": 28,
+      "speed": 2,
+      "round": 1
+    },
+    {
+      "time": 38970,
+      "technique": "JAB",
+      "score": 54,
+      "speed": 4.6,
+      "round": 1
+    },
+    {
+      "time": 46923,
+      "technique": "JAB",
+      "score": 46,
+      "speed": 3.9,
+      "round": 1
+    }
+  ]
+}

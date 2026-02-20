@@ -734,6 +734,14 @@
             <div id="defense-text">GUARD UP</div>
         </div>
 
+        <!-- DEBUG OVERLAY -->
+        <div id="debug-overlay" style="
+            position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+            background:rgba(0,0,0,0.75); border:1px solid #444; border-radius:8px;
+            padding:8px 16px; font-family:monospace; font-size:13px; color:#fff;
+            z-index:30; pointer-events:none; display:none; text-align:center; white-space:nowrap;
+        "></div>
+
         <!-- CONTROL BUTTONS -->
         <div id="control-buttons">
             <button class="ctrl-btn" id="btn-pause" title="Pause">⏸</button>
@@ -809,7 +817,7 @@
         // Plafond de vitesse realiste (au dessus = artefact de tracking, on ignore)
         const MAX_REALISTIC_SPEED = 0.35;
         // Minimum de frames a accumuler avant de valider un coup
-        const MIN_MOTION_FRAMES = 2;
+        const MIN_MOTION_FRAMES = 1;
         // Seuil pour considerer que la personne est debout (ratio hanches/epaules)
         const STANDING_THRESHOLD = 0.15;
 
@@ -856,7 +864,8 @@
             timerInterval: null,
             frameTimestamp: 0,
             lastFrameTime: 0,
-            fps: 30
+            fps: 30,
+            mode: 'combo'
         };
 
         // ===== DOM ELEMENTS =====
@@ -1202,6 +1211,11 @@
                 e.preventDefault();
                 stopSession();
             }
+            // Touche D = toggle debug overlay
+            if (e.code === 'KeyD') {
+                const dbg = document.getElementById('debug-overlay');
+                if (dbg) dbg.style.display = dbg.style.display === 'none' ? 'block' : 'none';
+            }
         });
 
         // Boutons
@@ -1294,11 +1308,8 @@
             return Math.min(speedMs, MAX_DISPLAY_SPEED);
         }
 
-        // ===== DETECTION POSTURE DEBOUT (v2.2 - corrige faux positifs assis) =====
+        // ===== DETECTION POSTURE DEBOUT (v2.4 - robuste tous cadrages) =====
         function checkStanding(landmarks) {
-            // v2.2: On utilise les GENOUX pour distinguer debout vs assis.
-            // Quand on est debout, les genoux sont BIEN EN DESSOUS des hanches.
-            // Quand on est assis, les genoux sont au meme niveau que les hanches (ou pas visibles).
             const leftHip = landmarks[23];
             const rightHip = landmarks[24];
             const leftShoulder = landmarks[11];
@@ -1310,42 +1321,35 @@
             const hipY = (leftHip.y + rightHip.y) / 2;
             const shoulderY = (leftShoulder.y + rightShoulder.y) / 2;
             const kneeY = (leftKnee.y + rightKnee.y) / 2;
-            const noseY = nose.y;
 
-            // Distance torse (epaules -> hanches)
-            const torsoLength = hipY - shoulderY;
-            // Distance tete -> hanches
-            const fullLength = hipY - noseY;
-            // Distance hanches -> genoux (CLE pour detecter debout vs assis)
-            const legLength = kneeY - hipY;
+            const torsoLength = hipY - shoulderY;   // epaules -> hanches
+            const legLength   = kneeY - hipY;       // hanches -> genoux (positif = debout)
 
-            // Visibility des genoux (MediaPipe donne un score de visibilite 0-1)
-            const kneeVisibility = Math.min(
-                leftKnee.visibility || 0,
-                rightKnee.visibility || 0
-            );
+            // Score de visibilite des genoux (abaisse a 0.3 car MediaPipe est conservateur a distance)
+            const kneeVisibility = Math.min(leftKnee.visibility || 0, rightKnee.visibility || 0);
 
-            // CRITERES POUR ETRE DEBOUT (v2.3 - adapte cadrage tronc) :
-            // Cas 1: Genoux visibles -> on verifie qu'ils sont bien en dessous des hanches
-            // Cas 2: Genoux hors cadre -> on check si les hanches sont en bas de l'image
-            //        (debout cadre serre = hanches pres du bord bas, assis = hanches au milieu)
-            const kneesVisible = kneeVisibility > 0.5;
-            const kneesBelow = legLength > 0.10;
-            const torsoCheck = torsoLength > STANDING_THRESHOLD && fullLength > 0.25;
-            const hipsNearBottom = hipY > 0.70; // hanches dans le quart bas = debout cadre serre
+            // Torse minimal detecte (evite les faux positifs quand la pose est perdue)
+            const goodTorso = torsoLength > 0.08;
 
-            let isStanding;
-            if (kneesVisible) {
-                // Genoux visibles : on verifie qu'ils sont bien en dessous des hanches
-                isStanding = torsoCheck && kneesBelow;
-            } else if (hipsNearBottom) {
-                // Genoux hors cadre MAIS hanches en bas de l'image = debout, cadrage tronc
-                // On garde le check torse standard (pas besoin d'etre plus strict)
-                isStanding = torsoCheck;
-            } else {
-                // Genoux hors cadre ET hanches au milieu de l'image = probablement assis
-                // (assis = la camera voit le torse au centre, pas en bas)
-                isStanding = false;
+            // CRITERES v2.4 :
+            // A) Genoux visibles (>0.3) ET en dessous des hanches -> debout
+            // B) Hanches dans la moitie basse de l'image (>0.50) -> debout (cadrage tronc ou corps entier)
+            // C) Sinon -> assis / inconnu -> bloque
+            const kneesDetected = kneeVisibility > 0.3 && legLength > 0.05;
+            const hipsLow       = hipY > 0.50;
+
+            let isStanding = goodTorso && (kneesDetected || hipsLow);
+
+            // DEBUG: affiche les valeurs brutes en bas de l'ecran
+            const dbg = document.getElementById('debug-overlay');
+            if (dbg && dbg.style.display !== 'none') {
+                dbg.innerHTML =
+                    `hipY=<b style="color:#ffcc00">${hipY.toFixed(2)}</b> | ` +
+                    `torso=<b style="color:#ffcc00">${torsoLength.toFixed(2)}</b> | ` +
+                    `kneeVis=<b style="color:#ffcc00">${kneeVisibility.toFixed(2)}</b> | ` +
+                    `leg=<b style="color:#ffcc00">${legLength.toFixed(2)}</b> | ` +
+                    `hipsLow=<b style="color:#ffcc00">${(hipY > 0.50 ? 'OUI' : 'NON')}</b> | ` +
+                    `standing=<b style="${isStanding ? 'color:#00ff88' : 'color:#ff4444'}">${isStanding ? 'OUI' : 'NON'}</b>`;
             }
 
             if (state.isStanding !== isStanding) {
@@ -1385,21 +1389,8 @@
             const leftHip = landmarks[23];
             const rightHip = landmarks[24];
 
-            // 1) CHECK POSTURE - si pas debout, on ignore tout
-            const standing = checkStanding(landmarks);
-            if (!standing) {
-                // Reset phases
-                state.rightArmPhase = 'idle';
-                state.leftArmPhase = 'idle';
-                state.rightMotionFrames = 0;
-                state.leftMotionFrames = 0;
-                currentSpeed.textContent = '---';
-                currentSpeed.style.color = '#555';
-                currentExtension.textContent = '---';
-                currentTechnique.textContent = 'LEVE-TOI';
-                currentTechnique.style.color = '#ff4444';
-                return;
-            }
+            // 1) CHECK POSTURE - indicateur visuel seulement, ne bloque plus la detection
+            checkStanding(landmarks);
             currentTechnique.style.color = '';
 
             // 2) Detection defense
@@ -1554,29 +1545,43 @@
                 return 'CROSS';
             }
 
-            // Pas assez de criteres pour classifier
+            // Fallback: mouvement detecte mais criteres stricts pas atteints
+            // On classe quand meme selon le cote plutot que de perdre le coup
+            if (extH >= config.extensionMin * 0.4 || elbowAngle > 90) {
+                if (side === 'left') return 'JAB';
+                return 'CROSS';
+            }
+
             return null;
         }
 
-        // ===== DEFENSE DETECTION (amelioree) =====
-        function detectDefense(leftW, rightW, nose, leftS, rightS) {
-            // Les DEUX mains doivent etre hautes et pres du visage
-            const leftNearFace = Math.abs(leftW.x - nose.x) < 0.12 && Math.abs(leftW.y - nose.y) < 0.15;
-            const rightNearFace = Math.abs(rightW.x - nose.x) < 0.12 && Math.abs(rightW.y - nose.y) < 0.15;
-            const leftHandUp = leftW.y < leftS.y;
-            const rightHandUp = rightW.y < rightS.y;
+        // ===== DEFENSE DETECTION (v2.4 - anti-faux-positifs) =====
+        // Garde haute = mains proches du visage, au dessus des epaules, tenues pendant 0.5s
+        let defenseHoldFrames = 0;
+        const DEFENSE_HOLD_REQUIRED = 12; // ~0.4s a 30fps
 
-            // Garde haute = DEUX mains en position + au dessus des epaules
+        function detectDefense(leftW, rightW, nose, leftS, rightS) {
+            const leftNearFace  = Math.abs(leftW.x  - nose.x) < 0.10 && leftW.y  < nose.y + 0.10;
+            const rightNearFace = Math.abs(rightW.x - nose.x) < 0.10 && rightW.y < nose.y + 0.10;
+            const leftHandUp    = leftW.y  < leftS.y  - 0.02;
+            const rightHandUp   = rightW.y < rightS.y - 0.02;
+
             const defending = leftNearFace && rightNearFace && leftHandUp && rightHandUp;
 
-            if (defending && !state.isDefending) {
-                state.defenseCount++;
-                state.isDefending = true;
-                defenseIndicator.classList.add('visible');
-                document.getElementById('defense-text').textContent = '🛡 GARDE HAUTE';
-            } else if (!defending && state.isDefending) {
-                state.isDefending = false;
-                defenseIndicator.classList.remove('visible');
+            if (defending) {
+                defenseHoldFrames++;
+                if (defenseHoldFrames === DEFENSE_HOLD_REQUIRED && !state.isDefending) {
+                    state.defenseCount++;
+                    state.isDefending = true;
+                    defenseIndicator.classList.add('visible');
+                    document.getElementById('defense-text').textContent = '🛡 GARDE HAUTE';
+                }
+            } else {
+                defenseHoldFrames = 0;
+                if (state.isDefending) {
+                    state.isDefending = false;
+                    defenseIndicator.classList.remove('visible');
+                }
             }
         }
 
@@ -1676,6 +1681,9 @@
             techniqueDisplay.classList.add('visible');
             setTimeout(() => techniqueDisplay.classList.remove('visible'), 600);
 
+            // Check combo mode
+            checkComboInput(technique);
+
             // History bar
             addHistoryBar(finalScore);
 
@@ -1751,6 +1759,9 @@
 
             hudTop.style.display = 'none';
             hudBottom.style.display = 'none';
+            document.getElementById('control-buttons').classList.remove('visible');
+            comboCallerEl.classList.remove('visible');
+            clearTimeout(comboState.timeout);
             endScreen.classList.add('visible');
         }
 

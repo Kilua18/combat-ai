@@ -1,0 +1,105 @@
+{
+  "app": "Combat.AI v2",
+  "date": "2026-02-20T18:12:18.374Z",
+  "duration_seconds": 188,
+  "rounds": 1,
+  "difficulty": "easy",
+  "total_punches": 12,
+  "avg_score": 28,
+  "max_combo": 2,
+  "best_speed": "3.1",
+  "best_score": 35,
+  "defense_count": 69,
+  "techniques": {
+    "jab": 5,
+    "cross": 1,
+    "crochet": 4,
+    "uppercut": 2
+  },
+  "history": [
+    {
+      "time": 25241,
+      "technique": "CROCHET G",
+      "score": 35,
+      "speed": 3,
+      "round": 1
+    },
+    {
+      "time": 29017,
+      "technique": "JAB",
+      "score": 29,
+      "speed": 1.3,
+      "round": 1
+    },
+    {
+      "time": 32626,
+      "technique": "JAB",
+      "score": 35,
+      "speed": 3.1,
+      "round": 1
+    },
+    {
+      "time": 80431,
+      "technique": "CROCHET G",
+      "score": 26,
+      "speed": 1.2,
+      "round": 1
+    },
+    {
+      "time": 82588,
+      "technique": "JAB",
+      "score": 28,
+      "speed": 1.5,
+      "round": 1
+    },
+    {
+      "time": 85314,
+      "technique": "UPPERCUT G",
+      "score": 32,
+      "speed": 2.3,
+      "round": 1
+    },
+    {
+      "time": 128923,
+      "technique": "JAB",
+      "score": 24,
+      "speed": 1,
+      "round": 1
+    },
+    {
+      "time": 132568,
+      "technique": "CROCHET D",
+      "score": 27,
+      "speed": 1.4,
+      "round": 1
+    },
+    {
+      "time": 140049,
+      "technique": "CROCHET G",
+      "score": 25,
+      "speed": 1,
+      "round": 1
+    },
+    {
+      "time": 142449,
+      "technique": "UPPERCUT D",
+      "score": 27,
+      "speed": 0.9,
+      "round": 1
+    },
+    {
+      "time": 173314,
+      "technique": "JAB",
+      "score": 26,
+      "speed": 1.7,
+      "round": 1
+    },
+    {
+      "time": 176184,
+      "technique": "CROSS",
+      "score": 25,
+      "speed": 0.8,
+      "round": 1
+    }
+  ]
+}
