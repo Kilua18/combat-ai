@@ -743,7 +743,7 @@
         <!-- HUD BOTTOM -->
         <div id="hud-bottom" style="display:none;">
             <div id="history-panel"></div>
-            <div id="branding">COMBAT.AI v2</div>
+            <div id="branding">COMBAT.AI v2.4</div>
         </div>
 
         <!-- PAUSE OVERLAY -->
@@ -753,6 +753,16 @@
                 <button class="pause-btn pause-btn-resume" id="btn-resume">REPRENDRE</button>
                 <button class="pause-btn pause-btn-stop" id="btn-end-session">ARR&Ecirc;TER</button>
             </div>
+        </div>
+
+        <!-- DEBUG OVERLAY (touche D) -->
+        <div id="debug-overlay" style="display:none; position:absolute; top:120px; left:20px; z-index:30; background:rgba(0,0,0,0.85); border:1px solid #00ff88; border-radius:8px; padding:10px 14px; font-family:monospace; font-size:13px; color:#00ff88; pointer-events:none; line-height:1.8;">
+            <div style="color:#fff; font-weight:bold; margin-bottom:4px;">DEBUG v2.4</div>
+            <div>hipY&nbsp;&nbsp;&nbsp;: <span id="dbg-hipy">---</span></div>
+            <div>torso&nbsp;&nbsp;: <span id="dbg-torso">---</span></div>
+            <div>kneeVis: <span id="dbg-kneevis">---</span></div>
+            <div>standing: <span id="dbg-standing">---</span></div>
+            <div>defFrm&nbsp;: <span id="dbg-deffrm">---</span></div>
         </div>
 
         <!-- END SCREEN -->
@@ -809,9 +819,9 @@
         // Plafond de vitesse realiste (au dessus = artefact de tracking, on ignore)
         const MAX_REALISTIC_SPEED = 0.35;
         // Minimum de frames a accumuler avant de valider un coup
-        const MIN_MOTION_FRAMES = 2;
+        const MIN_MOTION_FRAMES = 1;
         // Seuil pour considerer que la personne est debout (ratio hanches/epaules)
-        const STANDING_THRESHOLD = 0.15;
+        const STANDING_THRESHOLD = 0.08;
 
         // ===== STATE =====
         let state = {
@@ -834,6 +844,7 @@
             techniques: { jab: 0, cross: 0, crochet: 0, uppercut: 0 },
             defenseCount: 0,
             isDefending: false,
+            defenseFrameCount: 0,
             isStanding: false,
             history: [],
             sessionStart: null,
@@ -856,7 +867,8 @@
             timerInterval: null,
             frameTimestamp: 0,
             lastFrameTime: 0,
-            fps: 30
+            fps: 30,
+            debugMode: false
         };
 
         // ===== DOM ELEMENTS =====
@@ -1090,6 +1102,7 @@
             state.speeds = [];
             state.techniques = { jab: 0, cross: 0, crochet: 0, uppercut: 0 };
             state.defenseCount = 0;
+            state.defenseFrameCount = 0;
             state.history = [];
             state.paused = false;
             state.rightWristHistory = [];
@@ -1201,6 +1214,10 @@
             if (e.code === 'Escape' && state.started) {
                 e.preventDefault();
                 stopSession();
+            }
+            if (e.code === 'KeyD') {
+                state.debugMode = !state.debugMode;
+                document.getElementById('debug-overlay').style.display = state.debugMode ? 'block' : 'none';
             }
         });
 
@@ -1329,10 +1346,10 @@
             // Cas 1: Genoux visibles -> on verifie qu'ils sont bien en dessous des hanches
             // Cas 2: Genoux hors cadre -> on check si les hanches sont en bas de l'image
             //        (debout cadre serre = hanches pres du bord bas, assis = hanches au milieu)
-            const kneesVisible = kneeVisibility > 0.5;
-            const kneesBelow = legLength > 0.10;
+            const kneesVisible = kneeVisibility > 0.3;
+            const kneesBelow = legLength > 0.05;
             const torsoCheck = torsoLength > STANDING_THRESHOLD && fullLength > 0.25;
-            const hipsNearBottom = hipY > 0.70; // hanches dans le quart bas = debout cadre serre
+            const hipsNearBottom = hipY > 0.50; // hanches dans la moitie basse = debout cadre serre
 
             let isStanding;
             if (kneesVisible) {
@@ -1357,6 +1374,15 @@
                     postureStatus.textContent = 'LEVE-TOI';
                     postureStatus.style.color = '#ff4444';
                 }
+            }
+
+            // Mise a jour du debug overlay si actif
+            if (state.debugMode) {
+                document.getElementById('dbg-hipy').textContent    = hipY.toFixed(3);
+                document.getElementById('dbg-torso').textContent   = torsoLength.toFixed(3);
+                document.getElementById('dbg-kneevis').textContent = kneeVisibility.toFixed(3);
+                document.getElementById('dbg-standing').textContent = isStanding ? 'OUI' : 'NON';
+                document.getElementById('dbg-deffrm').textContent  = state.defenseFrameCount;
             }
 
             return isStanding;
@@ -1385,21 +1411,8 @@
             const leftHip = landmarks[23];
             const rightHip = landmarks[24];
 
-            // 1) CHECK POSTURE - si pas debout, on ignore tout
-            const standing = checkStanding(landmarks);
-            if (!standing) {
-                // Reset phases
-                state.rightArmPhase = 'idle';
-                state.leftArmPhase = 'idle';
-                state.rightMotionFrames = 0;
-                state.leftMotionFrames = 0;
-                currentSpeed.textContent = '---';
-                currentSpeed.style.color = '#555';
-                currentExtension.textContent = '---';
-                currentTechnique.textContent = 'LEVE-TOI';
-                currentTechnique.style.color = '#ff4444';
-                return;
-            }
+            // 1) CHECK POSTURE - indicateur visuel seulement, ne bloque plus la detection
+            checkStanding(landmarks);
             currentTechnique.style.color = '';
 
             // 2) Detection defense
@@ -1554,11 +1567,11 @@
                 return 'CROSS';
             }
 
-            // Pas assez de criteres pour classifier
-            return null;
+            // Fallback: coup detecte mais criteres incomplets -> JAB/CROSS selon le cote
+            return side === 'left' ? 'JAB' : 'CROSS';
         }
 
-        // ===== DEFENSE DETECTION (amelioree) =====
+        // ===== DEFENSE DETECTION (v2.4 - delai 12 frames ~0.4s) =====
         function detectDefense(leftW, rightW, nose, leftS, rightS) {
             // Les DEUX mains doivent etre hautes et pres du visage
             const leftNearFace = Math.abs(leftW.x - nose.x) < 0.12 && Math.abs(leftW.y - nose.y) < 0.15;
@@ -1569,14 +1582,21 @@
             // Garde haute = DEUX mains en position + au dessus des epaules
             const defending = leftNearFace && rightNearFace && leftHandUp && rightHandUp;
 
-            if (defending && !state.isDefending) {
-                state.defenseCount++;
-                state.isDefending = true;
-                defenseIndicator.classList.add('visible');
-                document.getElementById('defense-text').textContent = '🛡 GARDE HAUTE';
-            } else if (!defending && state.isDefending) {
-                state.isDefending = false;
-                defenseIndicator.classList.remove('visible');
+            if (defending) {
+                state.defenseFrameCount++;
+                // Declenchement seulement apres 12 frames tenues (~0.4s a 30fps)
+                if (state.defenseFrameCount >= 12 && !state.isDefending) {
+                    state.defenseCount++;
+                    state.isDefending = true;
+                    defenseIndicator.classList.add('visible');
+                    document.getElementById('defense-text').textContent = 'GARDE HAUTE';
+                }
+            } else {
+                state.defenseFrameCount = 0;
+                if (state.isDefending) {
+                    state.isDefending = false;
+                    defenseIndicator.classList.remove('visible');
+                }
             }
         }
 
@@ -1817,7 +1837,7 @@
         const camera = new Camera(video, cameraConfig);
 
         camera.start().then(() => {
-            console.log(`Combat.AI v2.1 initialized (${isMobile ? 'mobile' : 'desktop'} ${camWidth}x${camHeight})`);
+            console.log(`Combat.AI v2.4 initialized (${isMobile ? 'mobile' : 'desktop'} ${camWidth}x${camHeight})`);
         }).catch(err => {
             console.error('Camera error:', err);
             document.getElementById('status') && (document.getElementById('status').textContent = 'ERREUR CAMERA');
