@@ -1,0 +1,18 @@
+{
+  "name": "Combat.AI",
+  "short_name": "Combat.AI",
+  "description": "Coach de boxe IA en temps réel — détection de coups par caméra",
+  "start_url": "combat-ai-v2.html",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#00ff88",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
