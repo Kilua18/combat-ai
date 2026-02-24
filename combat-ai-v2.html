@@ -2,8 +2,13 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Combat.AI v2 - POC by Norman</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ff88">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Combat.AI">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
@@ -633,12 +638,104 @@
             from { transform: translate(-50%, -50%) translateY(20px); opacity: 0; }
             to { transform: translate(-50%, -50%) translateY(0); opacity: 1; }
         }
+
+        /* ===== CAMERA TOGGLE BUTTON (mobile) ===== */
+        #btn-camera-toggle {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid rgba(0,255,136,0.4);
+            color: #00ff88;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            font-size: 22px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 110;
+        }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            #btn-camera-toggle { display: flex; }
+
+            .logo-main { font-size: 42px; }
+            .logo-sub { font-size: 13px; letter-spacing: 4px; margin-bottom: 24px; }
+
+            .round-select { flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+            .difficulty-select { flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+            .round-btn { padding: 12px 18px; font-size: 14px; }
+            .diff-btn { padding: 10px 16px; font-size: 13px; }
+            #start-btn { padding: 16px 44px; font-size: 20px; }
+
+            /* HUD top — empile sur petits ecrans */
+            #hud-top { padding: 8px 8px; gap: 6px; }
+            .hud-panel { padding: 8px 10px; }
+            #stats-panel { min-width: unset; flex: 1; }
+            #timer-panel { min-width: unset; }
+            #combo-panel { min-width: unset; }
+
+            #timer { font-size: 30px; }
+            #round-label { font-size: 10px; letter-spacing: 2px; }
+            #combo-count { font-size: 32px; }
+            #combo-label { font-size: 10px; letter-spacing: 2px; }
+
+            .stat-label { font-size: 10px; letter-spacing: 1px; }
+            .stat-value { font-size: 14px; }
+
+            /* Technique flash centre */
+            #technique-name { font-size: 38px; }
+            #technique-score { font-size: 18px; }
+
+            /* Defense */
+            #defense-text { font-size: 20px; }
+            #defense-indicator { bottom: 80px; }
+
+            /* Combo caller */
+            #combo-caller-text { font-size: 22px; }
+            #combo-caller-sub { font-size: 14px; }
+
+            /* Pause */
+            #pause-text { font-size: 42px; }
+            .pause-btn { padding: 13px 26px; font-size: 14px; }
+
+            /* End screen */
+            .end-title { font-size: 28px; }
+            .end-subtitle { font-size: 14px; margin-bottom: 24px; }
+            .end-stats { grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 24px; }
+            .end-stat { padding: 14px 16px; }
+            .end-stat-value { font-size: 26px; }
+            .end-stat-label { font-size: 11px; }
+            .end-techniques { flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+            .end-tech { padding: 10px 16px; }
+            .end-buttons { gap: 12px; }
+            .end-btn { padding: 13px 24px; font-size: 14px; }
+
+            /* Control buttons — plus grands pour touch */
+            .ctrl-btn { width: 52px; height: 52px; font-size: 20px; }
+
+            /* Branding */
+            #branding { font-size: 13px; }
+        }
+
+        @media (max-width: 380px) {
+            .logo-main { font-size: 34px; }
+            #timer { font-size: 26px; }
+            #combo-count { font-size: 26px; }
+            #technique-name { font-size: 30px; }
+        }
     </style>
 </head>
 <body>
     <div id="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
+
+        <!-- CAMERA TOGGLE (mobile only, visible via CSS) -->
+        <button id="btn-camera-toggle" title="Changer de caméra">🔄</button>
 
         <!-- START SCREEN -->
         <div id="start-screen">
@@ -1230,7 +1327,7 @@
         });
 
         pose.setOptions({
-            modelComplexity: 1,
+            modelComplexity: isMobile ? 0 : 1,
             smoothLandmarks: true,
             enableSegmentation: false,
             minDetectionConfidence: 0.5,
@@ -1811,28 +1908,39 @@
         const camWidth = isMobile ? 640 : 1280;
         const camHeight = isMobile ? 480 : 720;
 
-        // Sur mobile: camera arriere par defaut, mais on utilise la frontale
-        const cameraConfig = {
-            onFrame: async () => {
-                await pose.send({ image: video });
-            },
-            width: camWidth,
-            height: camHeight
-        };
+        let currentFacingMode = 'user'; // camera frontale par defaut
+        let camera = null;
 
-        // Forcer camera frontale sur mobile
-        if (isMobile) {
-            cameraConfig.facingMode = 'user';
+        function startCamera(facingMode) {
+            if (camera) camera.stop();
+            const config = {
+                onFrame: async () => {
+                    await pose.send({ image: video });
+                },
+                width: camWidth,
+                height: camHeight,
+                facingMode: facingMode
+            };
+            camera = new Camera(video, config);
+            camera.start().then(() => {
+                console.log(`Combat.AI ready (${isMobile ? 'mobile' : 'desktop'} ${camWidth}x${camHeight} facingMode=${facingMode})`);
+            }).catch(err => {
+                console.error('Camera error:', err);
+            });
         }
 
-        const camera = new Camera(video, cameraConfig);
+        startCamera(currentFacingMode);
 
-        camera.start().then(() => {
-            console.log(`Combat.AI v2.1 initialized (${isMobile ? 'mobile' : 'desktop'} ${camWidth}x${camHeight})`);
-        }).catch(err => {
-            console.error('Camera error:', err);
-            document.getElementById('status') && (document.getElementById('status').textContent = 'ERREUR CAMERA');
+        // Toggle camera front/rear (mobile)
+        document.getElementById('btn-camera-toggle').addEventListener('click', () => {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            startCamera(currentFacingMode);
         });
+
+        // ===== SERVICE WORKER (PWA) =====
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
     </script>
 </body>
 </html>
