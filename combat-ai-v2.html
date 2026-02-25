@@ -908,6 +908,11 @@
     </div>
 
     <script>
+        // ===== DEVICE DETECTION =====
+        const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+        const camWidth = isMobile ? 640 : 1280;
+        const camHeight = isMobile ? 480 : 720;
+
         // ===== CONFIG v2.1 - CALIBRAGE REALISTE =====
         // Vitesse en pixels normalises/frame. Un vrai coup = 0.08-0.25 range.
         // En dessous de 0.05 = bruit/micro-mouvement. Au dessus de 0.30 = artefact tracking.
@@ -1910,10 +1915,6 @@
         }
 
         // ===== CAMERA (adaptatif mobile/desktop) =====
-        const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-        const camWidth = isMobile ? 640 : 1280;
-        const camHeight = isMobile ? 480 : 720;
-
         let currentFacingMode = 'user'; // camera frontale par defaut
         let camera = null;
 
