@@ -727,6 +727,7 @@
             #combo-count { font-size: 26px; }
             #technique-name { font-size: 30px; }
         }
+
     </style>
 </head>
 <body>
@@ -771,6 +772,11 @@
             </div>
 
             <button id="start-btn">GO</button>
+            <div id="camera-error" style="display:none; margin-top:20px; padding:16px 24px; border:2px solid #ff4444; border-radius:10px; background:rgba(255,68,68,0.1); color:#ff6666; font-size:14px; letter-spacing:1px; text-align:center; max-width:320px;">
+                <div style="font-size:22px; margin-bottom:8px;">⚠️ CAMÉRA NON DÉTECTÉE</div>
+                <div id="camera-error-msg">Autorise l'accès à la caméra dans les paramètres de ton navigateur, puis recharge la page.</div>
+                <button id="camera-retry-btn" style="margin-top:12px; background:transparent; border:1px solid #ff6666; color:#ff6666; padding:8px 20px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:13px; letter-spacing:1px;">RÉESSAYER</button>
+            </div>
         </div>
 
         <!-- HUD TOP -->
@@ -902,6 +908,11 @@
     </div>
 
     <script>
+        // ===== DEVICE DETECTION =====
+        const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+        const camWidth = isMobile ? 640 : 1280;
+        const camHeight = isMobile ? 480 : 720;
+
         // ===== CONFIG v2.1 - CALIBRAGE REALISTE =====
         // Vitesse en pixels normalises/frame. Un vrai coup = 0.08-0.25 range.
         // En dessous de 0.05 = bruit/micro-mouvement. Au dessus de 0.30 = artefact tracking.
@@ -1904,15 +1915,28 @@
         }
 
         // ===== CAMERA (adaptatif mobile/desktop) =====
-        const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-        const camWidth = isMobile ? 640 : 1280;
-        const camHeight = isMobile ? 480 : 720;
-
         let currentFacingMode = 'user'; // camera frontale par defaut
         let camera = null;
 
+        const cameraError = document.getElementById('camera-error');
+        const cameraErrorMsg = document.getElementById('camera-error-msg');
+
+        function getCameraErrorMessage(err) {
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                return 'Permission refusée. Va dans les réglages de ton navigateur et autorise l\'accès à la caméra pour ce site.';
+            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                return 'Aucune caméra détectée sur cet appareil.';
+            } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                return 'La caméra est déjà utilisée par une autre application. Ferme-la et réessaie.';
+            } else if (err.name === 'OverconstrainedError') {
+                return 'La caméra demandée n\'est pas disponible. Essaie de changer de caméra.';
+            }
+            return 'Impossible d\'accéder à la caméra : ' + (err.message || err.name);
+        }
+
         function startCamera(facingMode) {
             if (camera) camera.stop();
+            cameraError.style.display = 'none';
             const config = {
                 onFrame: async () => {
                     await pose.send({ image: video });
@@ -1924,10 +1948,23 @@
             camera = new Camera(video, config);
             camera.start().then(() => {
                 console.log(`Combat.AI ready (${isMobile ? 'mobile' : 'desktop'} ${camWidth}x${camHeight} facingMode=${facingMode})`);
+                cameraError.style.display = 'none';
             }).catch(err => {
                 console.error('Camera error:', err);
+                // Si facingMode 'user' échoue, on réessaie sans contrainte
+                if (facingMode !== null) {
+                    console.log('Retrying camera without facingMode constraint...');
+                    startCamera(null);
+                } else {
+                    cameraErrorMsg.textContent = getCameraErrorMessage(err);
+                    cameraError.style.display = 'block';
+                }
             });
         }
+
+        document.getElementById('camera-retry-btn').addEventListener('click', () => {
+            startCamera(currentFacingMode);
+        });
 
         startCamera(currentFacingMode);
 
@@ -1940,6 +1977,11 @@
         // ===== SERVICE WORKER (PWA) =====
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(() => {});
+            // Rechargement automatique quand un nouveau SW prend le contrôle
+            // (nouvelle version deployée → l'ancienne page en cache est remplacée)
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                window.location.reload();
+            });
         }
     </script>
 </body>
