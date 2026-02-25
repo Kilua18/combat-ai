@@ -1977,6 +1977,11 @@
         // ===== SERVICE WORKER (PWA) =====
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(() => {});
+            // Rechargement automatique quand un nouveau SW prend le contrôle
+            // (nouvelle version deployée → l'ancienne page en cache est remplacée)
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                window.location.reload();
+            });
         }
     </script>
 </body>
