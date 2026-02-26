@@ -304,6 +304,7 @@
         localStorage.setItem('combatai_count', newCount);
         signupCountEl.textContent = newCount;
       } else {
+        
         const data = await response.json();
         throw new Error(data.message || 'Erreur API Brevo');
       }
