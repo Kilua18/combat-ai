@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Combat.AI - Email Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root { --green: #00ff88; --blue: #00ccff; --orange: #ff6600; --dark: #0a0a0a; --card: #111; --border: rgba(255,255,255,0.08); --red: #ff4444; }
+    body { font-family: 'Inter', sans-serif; background: var(--dark); color: #fff; min-height: 100vh; }
+    nav { position: fixed; top: 0; left: 0; right: 0; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 50; background: rgba(10,10,10,0.9); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .nav-logo { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 900; background: linear-gradient(135deg, var(--green), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; gap: 20px; list-style: none; align-items: center; }
+    .nav-links a { color: #888; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.3s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-links a.active { color: var(--green); }
+    .main { padding: 80px 30px 30px; max-width: 1200px; margin: 0 auto; }
+    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-value { font-family: 'Orbitron', monospace; font-size: 28px; font-weight: 900; margin-bottom: 5px; }
+    .stat-value.green { color: var(--green); }
+    .stat-value.blue { color: var(--blue); }
+    .stat-value.orange { color: var(--orange); }
+    .stat-label { color: #888; font-size: 13px; }
+    .tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .tab-btn { padding: 12px 24px; background: none; border: none; color: #888; font-size: 14px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.3s; font-family: 'Inter', sans-serif; }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active { color: var(--green); border-bottom-color: var(--green); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .table-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .table-header h3 { font-size: 16px; font-weight: 700; }
+    .refresh-btn { padding: 8px 16px; background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); border-radius: 8px; color: var(--green); font-size: 13px; cursor: pointer; font-weight: 600; transition: all 0.3s; font-family: 'Inter', sans-serif; }
+    .refresh-btn:hover { background: rgba(0,255,136,0.2); }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 12px 20px; color: #888; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+    td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid var(--border); }
+    tr:hover { background: rgba(255,255,255,0.02); }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
+    .badge-orange { background: rgba(255,102,0,0.1); color: var(--orange); border: 1px solid rgba(255,102,0,0.3); }
+    .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+    .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+    .form-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 30px; }
+    .form-section h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; color: #888; font-size: 13px; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 16px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.3s; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--green); }
+    .form-group textarea { min-height: 150px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .btn-send { padding: 14px 30px; background: linear-gradient(135deg, var(--green), var(--blue)); border: none; border-radius: 10px; color: #000; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif; }
+    .btn-send:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,255,136,0.3); }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .welcome-section { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .preview-card { background: #1a1a1a; border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .preview-card h4 { font-size: 14px; color: #888; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+    .email-preview { background: #fff; color: #000; border-radius: 8px; padding: 30px; font-size: 14px; line-height: 1.8; }
+    .email-preview .ep-header { text-align: center; padding-bottom: 20px; border-bottom: 2px solid #00ff88; margin-bottom: 20px; }
+    .email-preview .ep-logo { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 900; color: #000; }
+    .email-preview .ep-badge { display: inline-block; background: #00ff88; color: #000; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-top: 8px; }
+    .email-preview h2 { font-size: 22px; margin-bottom: 12px; }
+    .email-preview .ep-cta { display: inline-block; background: linear-gradient(135deg, #00ff88, #00ccff); color: #000; padding: 12px 28px; border-radius: 8px; font-weight: 700; text-decoration: none; margin: 15px 0; }
+    .email-preview .ep-footer { margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #999; text-align: center; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); }
+    .toggle-label { font-size: 15px; font-weight: 600; }
+    .toggle-desc { font-size: 13px; color: #888; margin-top: 4px; }
+    .toggle { width: 48px; height: 26px; background: #333; border-radius: 13px; position: relative; cursor: pointer; transition: background 0.3s; }
+    .toggle.active { background: var(--green); }
+    .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform 0.3s; }
+    .toggle.active::after { transform: translateX(22px); }
+    .toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 100; transform: translateY(100px); opacity: 0; transition: all 0.4s; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: rgba(0,255,136,0.15); border: 1px solid rgba(0,255,136,0.4); color: var(--green); }
+    .toast.error { background: rgba(255,68,68,0.15); border: 1px solid rgba(255,68,68,0.4); color: var(--red); }
+    .loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: var(--green); border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .log-list { max-height: 300px; overflow-y: auto; }
+    .log-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .log-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+    .log-dot.sent { background: var(--green); }
+    .log-dot.failed { background: var(--red); }
+    .log-text { font-size: 13px; color: #ccc; }
+    .log-time { font-size: 11px; color: #666; margin-top: 2px; }
+    @media (max-width: 768px) { .nav-links { display: none; } .stats-bar { grid-template-columns: 1fr 1fr; } .form-row { grid-template-columns: 1fr; } .welcome-section { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">COMBAT.AI</div>
+  <ul class="nav-links">
+    <li><a href="index.html">Landing</a></li>
+    <li><a href="combat-ai-v2.html">App</a></li>
+    <li><a href="dashboard.html">Metrics</a></li>
+    <li><a href="emails.html" class="active">Emails</a></li>
+  </ul>
+</nav>
+<div class="main">
+  <div class="stats-bar">
+    <div class="stat-card"><div class="stat-value green" id="stat-contacts">-</div><div class="stat-label">Contacts</div></div>
+    <div class="stat-card"><div class="stat-value blue" id="stat-sent">-</div><div class="stat-label">Emails envoyes</div></div>
+    <div class="stat-card"><div class="stat-value orange" id="stat-opens">-</div><div class="stat-label">Taux ouverture</div></div>
+    <div class="stat-card"><div class="stat-value green" id="stat-quota">-</div><div class="stat-label">Quota restant</div></div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('contacts')">Contacts</button>
+    <button class="tab-btn" onclick="switchTab('send')">Envoyer campagne</button>
+    <button class="tab-btn" onclick="switchTab('welcome')">Email de bienvenue</button>
+    <button class="tab-btn" onclick="switchTab('log')">Historique</button>
+  </div>
+  <div class="tab-content active" id="tab-contacts">
+    <div class="table-container">
+      <div class="table-header">
+        <h3>Liste des inscrits — Waitlist Combat.AI</h3>
+        <button class="refresh-btn" onclick="loadContacts()">Rafraichir</button>
+      </div>
+      <table>
+        <thead><tr><th>Email</th><th>Date inscription</th><th>Statut</th></tr></thead>
+        <tbody id="contacts-body">
+          <tr><td colspan="3" class="empty-state"><div class="loader"></div> Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="tab-content" id="tab-send">
+    <div class="form-section">
+      <h3>Envoyer une campagne</h3>
+      <form id="campaign-form" onsubmit="sendCampaign(event)">
+        <div class="form-row">
+          <div class="form-group"><label>Nom expediteur</label><input type="text" id="sender-name" value="Combat.AI" required></div>
+          <div class="form-group"><label>Email expediteur</label><input type="email" id="sender-email" value="kkamagra18@gmail.com" required></div>
+        </div>
+        <div class="form-group"><label>Destinataires</label>
+          <select id="send-target"><option value="list">Toute la liste (#2 — Waitlist)</option><option value="single">Un seul email</option></select>
+        </div>
+        <div class="form-group" id="single-email-group" style="display:none;">
+          <label>Email du destinataire</label><input type="email" id="single-email" placeholder="destinataire@email.com">
+        </div>
+        <div class="form-group"><label>Objet du mail</label><input type="text" id="email-subject" placeholder="Ex: Combat.AI — Nouvelle fonctionnalite !" required></div>
+        <div class="form-group"><label>Contenu HTML</label><textarea id="email-body" placeholder="<h1>Salut !</h1><p>Voici les news Combat.AI...</p>"></textarea></div>
+        <button type="submit" class="btn-send" id="send-btn">Envoyer la campagne</button>
+      </form>
+    </div>
+  </div>
+  <div class="tab-content" id="tab-welcome">
+    <div class="welcome-section">
+      <div class="form-section">
+        <h3>Configuration email de bienvenue</h3>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Activer l'email de bienvenue</div><div class="toggle-desc">Envoie automatiquement un email quand quelqu'un rejoint la waitlist</div></div>
+          <div class="toggle active" id="welcome-toggle" onclick="toggleWelcome()"></div>
+        </div>
+        <div class="form-group" style="margin-top:20px;"><label>Objet</label><input type="text" id="welcome-subject" value="Bienvenue dans Combat.AI !"></div>
+        <div class="form-group"><label>Nom dans le mail</label><input type="text" id="welcome-sender" value="Norman — Combat.AI"></div>
+        <button class="btn-send" onclick="saveWelcomeConfig()">Sauvegarder</button>
+        <button class="btn-send" style="background:rgba(0,204,255,0.2);color:var(--blue);margin-left:12px;" onclick="testWelcomeEmail()">Envoyer un test</button>
+      </div>
+      <div class="preview-card">
+        <h4>Apercu du mail</h4>
+        <div class="email-preview">
+          <div class="ep-header"><div class="ep-logo">COMBAT.AI</div><div class="ep-badge">BIENVENUE</div></div>
+          <h2>Tu es dans la place !</h2>
+          <p>Salut,</p>
+          <p>Merci de rejoindre la waitlist de <strong>Combat.AI</strong> — ton futur coach de boxe IA.</p>
+          <p>On bosse dur pour te livrer la meilleure experience :</p>
+          <p>&#x1F94A; Detection de coups en temps reel<br>&#x1F4CA; Scoring et progression<br>&#x1F3AF; Coaching personnalise</p>
+          <a class="ep-cta" href="#">Essayer la demo</a>
+          <p>A tres vite dans le ring.</p>
+          <p><strong>Norman</strong><br>Fondateur, Combat.AI</p>
+          <div class="ep-footer">Combat.AI — Ton coach de boxe IA<br>Tu recois ce mail car tu as rejoint notre waitlist.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-content" id="tab-log">
+    <div class="form-section">
+      <h3>Historique des envois</h3>
+      <div class="log-list" id="log-list"><div class="empty-state"><div class="icon">&#x1F4ED;</div><p>Aucun envoi pour l'instant</p></div></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const BREVO_API_KEY = 'xsmtpsib-e717592d770e5bfdba644baa3a693fdcbe836201151d50e8c018151bfe34d84a-y1Cq6Y3s2db204QX';
+const BREVO_LIST_ID = 2;
+const SENDER_EMAIL = 'kkamagra18@gmail.com';
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+  event.target.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+document.getElementById('send-target').addEventListener('change', function() {
+  document.getElementById('single-email-group').style.display = this.value === 'single' ? 'block' : 'none';
+});
+
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(function() { t.classList.remove('show'); }, 4000);
+}
+
+async function loadContacts() {
+  var tbody = document.getElementById('contacts-body');
+  tbody.innerHTML = '<tr><td colspan="3" class="empty-state"><div class="loader"></div> Chargement...</td></tr>';
+  try {
+    var res = await fetch('https://api.brevo.com/v3/contacts/lists/' + BREVO_LIST_ID + '/contacts?limit=50&offset=0', {
+      headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' }
+    });
+    var data = await res.json();
+    var contacts = data.contacts || [];
+    document.getElementById('stat-contacts').textContent = data.count || contacts.length;
+    if (contacts.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Aucun contact</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    contacts.forEach(function(c) {
+      var date = c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '-';
+      var blocked = c.emailBlacklisted;
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + c.email + '</td><td>' + date + '</td><td><span class="badge ' + (blocked ? 'badge-orange' : 'badge-green') + '">' + (blocked ? 'Bloque' : 'Actif') + '</span></td>';
+      tbody.appendChild(tr);
+    });
+  } catch(err) {
+    console.error(err);
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Erreur de chargement</td></tr>';
+  }
+}
+
+async function loadStats() {
+  try {
+    var accRes = await fetch('https://api.brevo.com/v3/account', { headers: { 'api-key': BREVO_API_KEY } });
+    var acc = await accRes.json();
+    if (acc.plan && acc.plan.length > 0) { document.getElementById('stat-quota').textContent = (acc.plan[0].credits || 300) + '/j'; }
+  } catch(err) { console.error(err); }
+  try {
+    var evRes = await fetch('https://api.brevo.com/v3/smtp/statistics/aggregatedReport', { headers: { 'api-key': BREVO_API_KEY } });
+    var ev = await evRes.json();
+    document.getElementById('stat-sent').textContent = ev.requests || 0;
+    var opens = ev.requests > 0 ? Math.round((ev.uniqueOpens / ev.requests) * 100) : 0;
+    document.getElementById('stat-opens').textContent = opens + '%';
+  } catch(err) { console.error(err); }
+}
+
+async function sendCampaign(e) {
+  e.preventDefault();
+  var btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loader"></div> Envoi...';
+  var target = document.getElementById('send-target').value;
+  var subject = document.getElementById('email-subject').value;
+  var body = document.getElementById('email-body').value;
+  var senderName = document.getElementById('sender-name').value;
+  var senderEmail = document.getElementById('sender-email').value;
+  try {
+    if (target === 'single') {
+      var email = document.getElementById('single-email').value;
+      if (!email) { showToast('Renseigne un email', 'error'); btn.disabled = false; btn.innerHTML = 'Envoyer la campagne'; return; }
+      var res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: { name: senderName, email: senderEmail }, to: [{ email: email }], subject: subject, htmlContent: body || '<p>' + subject + '</p>' })
+      });
+      if (res.ok) { showToast('Email envoye a ' + email, 'success'); addLog('Email envoye a ' + email, 'sent'); }
+      else { var err = await res.json(); throw new Error(err.message); }
+    } else {
+      var res2 = await fetch('https://api.brevo.com/v3/emailCampaigns', {
+        method: 'POST',
+        headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Campagne ' + new Date().toLocaleDateString('fr-FR'), subject: subject, sender: { name: senderName, email: senderEmail }, htmlContent: body || '<p>' + subject + '</p>', recipients: { listIds: [BREVO_LIST_ID] } })
+      });
+      if (res2.ok || res2.status === 201) {
+        var data2 = await res2.json();
+        await fetch('https://api.brevo.com/v3/emailCampaigns/' + data2.id + '/sendNow', { method: 'POST', headers: { 'api-key': BREVO_API_KEY } });
+        showToast('Campagne envoyee !', 'success');
+        addLog('Campagne: ' + subject, 'sent');
+      } else { var err2 = await res2.json(); throw new Error(err2.message); }
+    }
+  } catch(err) { showToast('Erreur: ' + err.message, 'error'); addLog('Echec: ' + err.message, 'failed'); }
+  finally { btn.disabled = false; btn.innerHTML = 'Envoyer la campagne'; }
+}
+
+function getWelcomeHTML() {
+  return '<div style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;background:#fff;padding:0;"><div style="text-align:center;padding:30px 20px;border-bottom:3px solid #00ff88;"><div style="font-family:monospace;font-size:24px;font-weight:900;letter-spacing:2px;">COMBAT.AI</div><div style="display:inline-block;background:#00ff88;color:#000;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-top:10px;">BIENVENUE</div></div><div style="padding:30px;"><h2 style="font-size:24px;margin-bottom:15px;">Tu es dans la place !</h2><p>Salut,</p><p>Merci de rejoindre la waitlist de <strong>Combat.AI</strong>.</p><p>On bosse dur pour te livrer la meilleure experience :</p><ul style="list-style:none;padding:0;"><li>&#x1F94A; Detection de coups en temps reel</li><li>&#x1F4CA; Scoring et progression</li><li>&#x1F3AF; Coaching personnalise</li></ul><p style="text-align:center;margin:25px 0;"><a href="https://kilua18.github.io/combat-ai/combat-ai-v2.html" style="display:inline-block;background:linear-gradient(135deg,#00ff88,#00ccff);color:#000;padding:14px 32px;border-radius:8px;font-weight:700;text-decoration:none;">Essayer la demo</a></p><p>A tres vite dans le ring.</p><p><strong>Norman</strong><br>Fondateur, Combat.AI</p></div><div style="padding:20px;text-align:center;border-top:1px solid #eee;font-size:12px;color:#999;">Combat.AI — Ton coach de boxe IA</div></div>';
+}
+
+function toggleWelcome() {
+  var toggle = document.getElementById('welcome-toggle');
+  toggle.classList.toggle('active');
+  localStorage.setItem('combatai_welcome_active', toggle.classList.contains('active'));
+  showToast(toggle.classList.contains('active') ? 'Email bienvenue active' : 'Email bienvenue desactive', 'success');
+}
+
+function saveWelcomeConfig() {
+  localStorage.setItem('combatai_welcome_subject', document.getElementById('welcome-subject').value);
+  localStorage.setItem('combatai_welcome_sender', document.getElementById('welcome-sender').value);
+  showToast('Config sauvegardee !', 'success');
+}
+
+async function testWelcomeEmail() {
+  var subject = document.getElementById('welcome-subject').value;
+  var sender = document.getElementById('welcome-sender').value;
+  try {
+    var res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: { name: sender, email: SENDER_EMAIL }, to: [{ email: SENDER_EMAIL }], subject: '[TEST] ' + subject, htmlContent: getWelcomeHTML() })
+    });
+    if (res.ok) { showToast('Test envoye a ' + SENDER_EMAIL, 'success'); addLog('Test bienvenue envoye', 'sent'); }
+    else { var err = await res.json(); throw new Error(err.message); }
+  } catch(err) { showToast('Erreur: ' + err.message, 'error'); }
+}
+
+function addLog(text, status) {
+  var logs = JSON.parse(localStorage.getItem('combatai_email_logs') || '[]');
+  logs.unshift({ text: text, status: status, time: new Date().toISOString() });
+  if (logs.length > 50) logs.pop();
+  localStorage.setItem('combatai_email_logs', JSON.stringify(logs));
+  renderLogs();
+}
+
+function renderLogs() {
+  var logs = JSON.parse(localStorage.getItem('combatai_email_logs') || '[]');
+  var container = document.getElementById('log-list');
+  if (logs.length === 0) { container.innerHTML = '<div class="empty-state"><p>Aucun envoi</p></div>'; return; }
+  container.innerHTML = logs.map(function(l) {
+    var date = new Date(l.time).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    return '<div class="log-item"><div class="log-dot ' + l.status + '"></div><div><div class="log-text">' + l.text + '</div><div class="log-time">' + date + '</div></div></div>';
+  }).join('');
+}
+
+loadContacts();
+loadStats();
+renderLogs();
+if (localStorage.getItem('combatai_welcome_active') === 'false') { document.getElementById('welcome-toggle').classList.remove('active'); }
+</script>
+</body>
+</html>
