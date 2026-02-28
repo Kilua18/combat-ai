@@ -1,727 +1,325 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Combat.AI - Ton coach de boxe intelligent</title>
-    <meta name="description" content="Combat.AI analyse tes coups en temps r&eacute;el avec l'IA. Jab, cross, crochet, uppercut : score, vitesse et technique. 100% navigateur, 0 mat&eacute;riel.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --green: #00ff88;
-            --blue: #00ccff;
-            --orange: #ff6600;
-            --dark: #0a0a0a;
-            --card: #111;
-            --border: rgba(255,255,255,0.08);
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--dark);
-            color: #fff;
-            overflow-x: hidden;
-        }
-
-        /* ===== NAV ===== */
-        nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 50;
-            background: rgba(10,10,10,0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .nav-logo {
-            font-family: 'Orbitron', monospace;
-            font-size: 22px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--green), var(--blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: #888;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover { color: #fff; }
-
-        .nav-cta {
-            background: linear-gradient(135deg, var(--green), var(--blue));
-            color: #000 !important;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 700 !important;
-            font-size: 13px !important;
-        }
-
-        /* ===== HERO ===== */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 120px 20px 80px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 30% 50%, rgba(0,255,136,0.06) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 50%, rgba(0,204,255,0.04) 0%, transparent 50%);
-            animation: heroGlow 8s ease-in-out infinite alternate;
-        }
-
-        @keyframes heroGlow {
-            from { transform: translate(0, 0); }
-            to { transform: translate(-2%, -1%); }
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            max-width: 800px;
-        }
-
-        .hero-badge {
-            display: inline-block;
-            padding: 8px 20px;
-            background: rgba(0,255,136,0.1);
-            border: 1px solid rgba(0,255,136,0.3);
-            border-radius: 50px;
-            font-size: 13px;
-            color: var(--green);
-            font-weight: 600;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-        }
-
-        .hero h1 {
-            font-family: 'Orbitron', monospace;
-            font-size: clamp(40px, 8vw, 80px);
-            font-weight: 900;
-            line-height: 1.1;
-            margin-bottom: 25px;
-        }
-
-        .hero h1 .gradient {
-            background: linear-gradient(135deg, var(--green), var(--blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero p {
-            font-size: 20px;
-            color: #999;
-            line-height: 1.6;
-            margin-bottom: 40px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .hero-cta {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 16px 36px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--green), var(--blue));
-            color: #000;
-            border: none;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 40px rgba(0,255,136,0.3);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid #333;
-            color: #fff;
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--green);
-            color: var(--green);
-        }
-
-        /* ===== DEMO VIDEO ===== */
-        .demo-section {
-            padding: 60px 20px 100px;
-            text-align: center;
-        }
-
-        .demo-container {
-            max-width: 900px;
-            margin: 0 auto;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: #111;
-            aspect-ratio: 16/9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .demo-placeholder {
-            color: #555;
-            font-size: 18px;
-        }
-
-        .demo-play-btn {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: rgba(0,255,136,0.2);
-            border: 2px solid var(--green);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: absolute;
-        }
-
-        .demo-play-btn:hover {
-            background: rgba(0,255,136,0.4);
-            transform: scale(1.1);
-        }
-
-        .demo-play-btn::after {
-            content: '';
-            border-left: 24px solid var(--green);
-            border-top: 14px solid transparent;
-            border-bottom: 14px solid transparent;
-            margin-left: 5px;
-        }
-
-        /* ===== FEATURES ===== */
-        .features {
-            padding: 100px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .section-title {
-            text-align: center;
-            margin-bottom: 60px;
-        }
-
-        .section-title h2 {
-            font-family: 'Orbitron', monospace;
-            font-size: 36px;
-            font-weight: 900;
-            margin-bottom: 15px;
-        }
-
-        .section-title p {
-            color: #888;
-            font-size: 18px;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-        }
-
-        .feature-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 35px 30px;
-            transition: all 0.3s;
-        }
-
-        .feature-card:hover {
-            border-color: rgba(0,255,136,0.3);
-            transform: translateY(-4px);
-        }
-
-        .feature-icon {
-            font-size: 40px;
-            margin-bottom: 20px;
-        }
-
-        .feature-card h3 {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-
-        .feature-card p {
-            color: #888;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-
-        /* ===== TECHNIQUES ===== */
-        .techniques {
-            padding: 100px 20px;
-            background: linear-gradient(180deg, transparent, rgba(0,255,136,0.02), transparent);
-        }
-
-        .techniques-inner {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .tech-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 50px;
-        }
-
-        .tech-item {
-            text-align: center;
-            padding: 30px 20px;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            transition: all 0.3s;
-        }
-
-        .tech-item:hover {
-            border-color: rgba(0,255,136,0.3);
-            background: rgba(0,255,136,0.03);
-        }
-
-        .tech-emoji {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-
-        .tech-name {
-            font-family: 'Orbitron', monospace;
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .tech-desc {
-            font-size: 13px;
-            color: #888;
-        }
-
-        /* ===== HOW IT WORKS ===== */
-        .how-it-works {
-            padding: 100px 20px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .steps {
-            display: flex;
-            flex-direction: column;
-            gap: 40px;
-            margin-top: 50px;
-        }
-
-        .step {
-            display: flex;
-            gap: 30px;
-            align-items: flex-start;
-        }
-
-        .step-number {
-            font-family: 'Orbitron', monospace;
-            font-size: 48px;
-            font-weight: 900;
-            color: rgba(0,255,136,0.2);
-            line-height: 1;
-            min-width: 60px;
-        }
-
-        .step-content h3 {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .step-content p {
-            color: #888;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        /* ===== WAITLIST ===== */
-        .waitlist {
-            padding: 100px 20px;
-            text-align: center;
-        }
-
-        .waitlist-box {
-            max-width: 600px;
-            margin: 0 auto;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 50px 40px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .waitlist-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--green), var(--blue));
-        }
-
-        .waitlist-box h2 {
-            font-family: 'Orbitron', monospace;
-            font-size: 28px;
-            font-weight: 900;
-            margin-bottom: 15px;
-        }
-
-        .waitlist-box p {
-            color: #888;
-            margin-bottom: 30px;
-            font-size: 16px;
-        }
-
-        .waitlist-form {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .waitlist-form input {
-            flex: 1;
-            padding: 16px 20px;
-            border-radius: 10px;
-            border: 1px solid #333;
-            background: #1a1a1a;
-            color: #fff;
-            font-size: 16px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .waitlist-form input:focus {
-            border-color: var(--green);
-        }
-
-        .waitlist-form button {
-            padding: 16px 30px;
-            background: linear-gradient(135deg, var(--green), var(--blue));
-            border: none;
-            border-radius: 10px;
-            color: #000;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
-            white-space: nowrap;
-        }
-
-        .waitlist-form button:hover {
-            transform: scale(1.02);
-            box-shadow: 0 5px 25px rgba(0,255,136,0.3);
-        }
-
-        .waitlist-count {
-            font-size: 14px;
-            color: #666;
-        }
-
-        .waitlist-count span {
-            color: var(--green);
-            font-weight: 600;
-        }
-
-        #waitlist-success {
-            display: none;
-            padding: 20px;
-            background: rgba(0,255,136,0.1);
-            border: 1px solid rgba(0,255,136,0.3);
-            border-radius: 10px;
-            color: var(--green);
-            font-weight: 600;
-        }
-
-        /* ===== FOOTER ===== */
-        footer {
-            padding: 40px 20px;
-            text-align: center;
-            border-top: 1px solid var(--border);
-            color: #555;
-            font-size: 14px;
-        }
-
-        footer .footer-logo {
-            font-family: 'Orbitron', monospace;
-            font-size: 16px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
-            nav { padding: 15px 20px; }
-            .nav-links { display: none; }
-            .hero h1 { font-size: 36px; }
-            .hero p { font-size: 16px; }
-            .waitlist-form { flex-direction: column; }
-            .end-stats { grid-template-columns: repeat(2, 1fr); }
-            .step { flex-direction: column; gap: 10px; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Combat.AI - Ton coach de boxe intelligent</title>
+  <meta name="description" content="Combat.AI analyse tes coups en temps réel avec l'IA. Jab, cross, crochet, uppercut : score, vitesse et technique. 100% navigateur, 0 matériel.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --green: #00ff88;
+      --blue: #00ccff;
+      --orange: #ff6600;
+      --dark: #0a0a0a;
+      --card: #111;
+      --border: rgba(255,255,255,0.08);
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--dark); color: #fff; overflow-x: hidden; }
+    /* ===== NAV ===== */
+    nav { position: fixed; top: 0; left: 0; right: 0; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 50; background: rgba(10,10,10,0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .nav-logo { font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 900; background: linear-gradient(135deg, var(--green), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; gap: 30px; list-style: none; }
+    .nav-links a { color: #888; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.3s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta { background: linear-gradient(135deg, var(--green), var(--blue)); color: #000 !important; padding: 10px 24px; border-radius: 8px; font-weight: 700 !important; font-size: 13px !important; }
+    /* ===== HERO ===== */
+    .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 120px 20px 80px; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 30% 50%, rgba(0,255,136,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(0,204,255,0.04) 0%, transparent 50%); animation: heroGlow 8s ease-in-out infinite alternate; }
+    @keyframes heroGlow { from { transform: translate(0, 0); } to { transform: translate(-2%, -1%); } }
+    .hero-content { position: relative; z-index: 2; max-width: 800px; }
+    .hero-badge { display: inline-block; padding: 8px 20px; background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); border-radius: 50px; font-size: 13px; color: var(--green); font-weight: 600; margin-bottom: 30px; letter-spacing: 1px; }
+    .hero h1 { font-family: 'Orbitron', monospace; font-size: clamp(40px, 8vw, 80px); font-weight: 900; line-height: 1.1; margin-bottom: 25px; }
+    .hero h1 .gradient { background: linear-gradient(135deg, var(--green), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 20px; color: #999; line-height: 1.6; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .hero-cta { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    .btn { padding: 16px 36px; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: linear-gradient(135deg, var(--green), var(--blue)); color: #000; border: none; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(0,255,136,0.3); }
+    .btn-secondary { background: transparent; border: 2px solid #333; color: #fff; }
+    .btn-secondary:hover { border-color: var(--green); color: var(--green); }
+    /* ===== DEMO VIDEO ===== */
+    .demo-section { padding: 60px 20px 100px; text-align: center; }
+    .demo-container { max-width: 900px; margin: 0 auto; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background: #111; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; position: relative; }
+    .demo-placeholder { color: #555; font-size: 18px; }
+    .demo-play-btn { width: 80px; height: 80px; border-radius: 50%; background: rgba(0,255,136,0.2); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; position: absolute; }
+    .demo-play-btn:hover { background: rgba(0,255,136,0.4); transform: scale(1.1); }
+    .demo-play-btn::after { content: ''; border-left: 24px solid var(--green); border-top: 14px solid transparent; border-bottom: 14px solid transparent; margin-left: 5px; }
+    /* ===== FEATURES ===== */
+    .features { padding: 100px 20px; max-width: 1200px; margin: 0 auto; }
+    .section-title { text-align: center; margin-bottom: 60px; }
+    .section-title h2 { font-family: 'Orbitron', monospace; font-size: 36px; font-weight: 900; margin-bottom: 15px; }
+    .section-title p { color: #888; font-size: 18px; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 35px 30px; transition: all 0.3s; }
+    .feature-card:hover { border-color: rgba(0,255,136,0.3); transform: translateY(-4px); }
+    .feature-icon { font-size: 40px; margin-bottom: 20px; }
+    .feature-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+    .feature-card p { color: #888; font-size: 15px; line-height: 1.6; }
+    /* ===== TECHNIQUES ===== */
+    .techniques { padding: 100px 20px; background: linear-gradient(180deg, transparent, rgba(0,255,136,0.02), transparent); }
+    .techniques-inner { max-width: 1000px; margin: 0 auto; }
+    .tech-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 50px; }
+    .tech-item { text-align: center; padding: 30px 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; transition: all 0.3s; }
+    .tech-item:hover { border-color: rgba(0,255,136,0.3); background: rgba(0,255,136,0.03); }
+    .tech-emoji { font-size: 48px; margin-bottom: 15px; }
+    .tech-name { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .tech-desc { font-size: 13px; color: #888; }
+    /* ===== HOW IT WORKS ===== */
+    .how-it-works { padding: 100px 20px; max-width: 900px; margin: 0 auto; }
+    .steps { display: flex; flex-direction: column; gap: 40px; margin-top: 50px; }
+    .step { display: flex; gap: 30px; align-items: flex-start; }
+    .step-number { font-family: 'Orbitron', monospace; font-size: 48px; font-weight: 900; color: rgba(0,255,136,0.2); line-height: 1; min-width: 60px; }
+    .step-content h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .step-content p { color: #888; font-size: 16px; line-height: 1.6; }
+    /* ===== WAITLIST ===== */
+    .waitlist { padding: 100px 20px; text-align: center; }
+    .waitlist-box { max-width: 600px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 50px 40px; position: relative; overflow: hidden; }
+    .waitlist-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--green), var(--blue)); }
+    .waitlist-box h2 { font-family: 'Orbitron', monospace; font-size: 28px; font-weight: 900; margin-bottom: 15px; }
+    .waitlist-box p { color: #888; margin-bottom: 30px; font-size: 16px; }
+    .waitlist-form { display: flex; gap: 12px; margin-bottom: 20px; }
+    .waitlist-form input { flex: 1; padding: 16px 20px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #fff; font-size: 16px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.3s; }
+    .waitlist-form input:focus { border-color: var(--green); }
+    .waitlist-form button { padding: 16px 30px; background: linear-gradient(135deg, var(--green), var(--blue)); border: none; border-radius: 10px; color: #000; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+    .waitlist-form button:hover { transform: scale(1.02); box-shadow: 0 5px 25px rgba(0,255,136,0.3); }
+    .waitlist-count { font-size: 14px; color: #666; }
+    .waitlist-count span { color: var(--green); font-weight: 600; }
+    #waitlist-success { display: none; padding: 20px; background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); border-radius: 10px; color: var(--green); font-weight: 600; }
+    #waitlist-error { display: none; padding: 20px; background: rgba(255,60,60,0.1); border: 1px solid rgba(255,60,60,0.3); border-radius: 10px; color: #ff6060; font-weight: 600; margin-bottom: 12px; }
+    /* ===== FOOTER ===== */
+    footer { padding: 40px 20px; text-align: center; border-top: 1px solid var(--border); color: #555; font-size: 14px; }
+    footer .footer-logo { font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700; color: #333; margin-bottom: 10px; }
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      nav { padding: 15px 20px; }
+      .nav-links { display: none; }
+      .hero h1 { font-size: 36px; }
+      .hero p { font-size: 16px; }
+      .waitlist-form { flex-direction: column; }
+      .end-stats { grid-template-columns: repeat(2, 1fr); }
+      .step { flex-direction: column; gap: 10px; }
+    }
+  </style>
 </head>
 <body>
-    <!-- NAV -->
-    <nav>
-        <div class="nav-logo">COMBAT.AI</div>
-        <ul class="nav-links">
-            <li><a href="#features">Features</a></li>
-            <li><a href="#techniques">Techniques</a></li>
-            <li><a href="#how">Comment &ccedil;a marche</a></li>
-            <li><a href="#demo" class="btn-link">D&eacute;mo live</a></li>
-            <li><a href="#waitlist" class="nav-cta">Rejoindre</a></li>
-        </ul>
-    </nav>
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">COMBAT.AI</div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#techniques">Techniques</a></li>
+    <li><a href="#how">Comment ça marche</a></li>
+    <li><a href="#demo" class="btn-link">Démo live</a></li>
+    <li><a href="#waitlist" class="nav-cta">Rejoindre</a></li>
+  </ul>
+</nav>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">BETA - ACCÈS ANTICIPÉ</div>
+    <h1>Ton coach de<br><span class="gradient">boxe IA</span></h1>
+    <p>Combat.AI analyse tes coups en temps réel directement depuis ton navigateur. Jab, cross, crochet, uppercut : score chaque technique et progresse.</p>
+    <div class="hero-cta">
+      <a href="combat-ai-v2.html" class="btn btn-primary">Essayer la démo</a>
+      <a href="#waitlist" class="btn btn-secondary">Rejoindre la waitlist</a>
+    </div>
+  </div>
+</section>
+<!-- DEMO -->
+<section class="demo-section" id="demo">
+  <div class="demo-container">
+    <div class="demo-placeholder">Aperçu vidéo de Combat.AI</div>
+    <div class="demo-play-btn" onclick="window.location.href='combat-ai-v2.html'"></div>
+  </div>
+</section>
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-title">
+    <h2>Pourquoi Combat.AI</h2>
+    <p>La technologie au service de ton entraînement</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">📷</div>
+      <h3>Vision IA</h3>
+      <p>MediaPipe Pose détecte 33 points de ton corps en temps réel. Pas de capteur, pas de gants connectés.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Temps réel</h3>
+      <p>Chaque coup est analysé instantanément : vitesse, extension, technique. Feedback immédiat.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🥊</div>
+      <h3>4 techniques</h3>
+      <p>Jab, cross, crochet, uppercut. L'IA distingue chaque type de coup selon l'angle et la trajectoire.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <h3>Score &amp; combo</h3>
+      <p>Chaque coup reçoit un score /100. Chaîne les combos pour monter ton level.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🛡️</div>
+      <h3>Défense</h3>
+      <p>Combat.AI détecte aussi ta garde haute. Attaque + défense = vrai boxeur.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Export session</h3>
+      <p>Télécharge tes stats en JSON après chaque session. Suis ta progression dans le temps.</p>
+    </div>
+  </div>
+</section>
+<!-- TECHNIQUES -->
+<section class="techniques" id="techniques">
+  <div class="techniques-inner">
+    <div class="section-title">
+      <h2>Techniques analysées</h2>
+      <p>4 coups fondamentaux détectés par l'IA</p>
+    </div>
+    <div class="tech-list">
+      <div class="tech-item">
+        <div class="tech-emoji">👊</div>
+        <div class="tech-name">JAB</div>
+        <div class="tech-desc">Direct avant rapide, bras avant tendu</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-emoji">💥</div>
+        <div class="tech-name">CROSS</div>
+        <div class="tech-desc">Direct arrière puissant, rotation des hanches</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-emoji">🌀</div>
+        <div class="tech-name">CROCHET</div>
+        <div class="tech-desc">Coup circulaire, coude plié, mouvement latéral</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-emoji">🔥</div>
+        <div class="tech-name">UPPERCUT</div>
+        <div class="tech-desc">Coup montant, remontée explosive du poing</div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- HOW IT WORKS -->
+<section class="how-it-works" id="how">
+  <div class="section-title">
+    <h2>Comment ça marche</h2>
+    <p>3 étapes, zéro installation</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-number">01</div>
+      <div class="step-content">
+        <h3>Ouvre ton navigateur</h3>
+        <p>Pas d'app à télécharger. Chrome, Firefox, Safari... Combat.AI tourne directement dans ton navigateur avec ta webcam.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-number">02</div>
+      <div class="step-content">
+        <h3>Lance un round</h3>
+        <p>Choisis le nombre de rounds, la difficulté, et c'est parti. L'IA détecte ta pose et analyse chaque mouvement.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-number">03</div>
+      <div class="step-content">
+        <h3>Progresse</h3>
+        <p>Après chaque session, consulte tes stats : score moyen, meilleur combo, techniques préférées. Exporte et compare.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- WAITLIST -->
+<section class="waitlist" id="waitlist">
+  <div class="waitlist-box">
+    <h2>Rejoins la waitlist</h2>
+    <p>Sois parmi les premiers à accéder à la version complète avec suivi de progression, coaching personnalisé et plus.</p>
+    <div id="waitlist-error">❌ Une erreur est survenue — réessaie dans quelques secondes.</div>
+    <form class="waitlist-form" id="waitlist-form">
+      <input type="email" id="email-input" placeholder="ton@email.com" required>
+      <button type="submit">J'embarque</button>
+    </form>
+    <div id="waitlist-success">✅ Tu es sur la liste ! On te contacte bientôt.</div>
+    <div class="waitlist-count">Déjà <span id="signup-count">0</span> inscrits</div>
+  </div>
+</section>
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">COMBAT.AI</div>
+  <p>Built by Norman &mdash; POC 2025</p>
+</footer>
+<script>
+      // ─── WAITLIST via Cloudflare Worker ──────────────────────────
+    const WORKER_URL = 'https://combat-ai-waitlist.kkamagra18.workers.dev';
 
-    <!-- HERO -->
-    <section class="hero">
-        <div class="hero-content">
-            <div class="hero-badge">BETA - ACC&Egrave;S ANTICIP&Eacute;</div>
-            <h1>Ton coach de<br><span class="gradient">boxe IA</span></h1>
-            <p>Combat.AI analyse tes coups en temps r&eacute;el directement depuis ton navigateur. Jab, cross, crochet, uppercut : score chaque technique et progresse.</p>
-            <div class="hero-cta">
-                <a href="combat-ai-v2.html" class="btn btn-primary">Essayer la d&eacute;mo</a>
-                <a href="#waitlist" class="btn btn-secondary">Rejoindre la waitlist</a>
-            </div>
-        </div>
-    </section>
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
 
-    <!-- DEMO -->
-    <section class="demo-section" id="demo">
-        <div class="demo-container">
-            <div class="demo-placeholder">Aper&ccedil;u vid&eacute;o de Combat.AI</div>
-            <div class="demo-play-btn" onclick="window.location.href='combat-ai-v2.html'"></div>
-        </div>
-    </section>
+    // Compteur d'inscrits (côté client, approximatif)
+    const signupCountEl = document.getElementById('signup-count');
+    const localCount = parseInt(localStorage.getItem('combatai_count') || '0');
+    signupCountEl.textContent = localCount;
 
-    <!-- FEATURES -->
-    <section class="features" id="features">
-        <div class="section-title">
-            <h2>Pourquoi Combat.AI</h2>
-            <p>La technologie au service de ton entra&icirc;nement</p>
-        </div>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">&#x1F4F7;</div>
-                <h3>Vision IA</h3>
-                <p>MediaPipe Pose d&eacute;tecte 33 points de ton corps en temps r&eacute;el. Pas de capteur, pas de gants connect&eacute;s.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">&#x26A1;</div>
-                <h3>Temps r&eacute;el</h3>
-                <p>Chaque coup est analys&eacute; instantan&eacute;ment : vitesse, extension, technique. Feedback imm&eacute;diat.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">&#x1F94A;</div>
-                <h3>4 techniques</h3>
-                <p>Jab, cross, crochet, uppercut. L'IA distingue chaque type de coup selon l'angle et la trajectoire.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">&#x1F3AF;</div>
-                <h3>Score &amp; combo</h3>
-                <p>Chaque coup re&ccedil;oit un score /100. Cha&icirc;ne les combos pour monter ton level.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">&#x1F6E1;&#xFE0F;</div>
-                <h3>D&eacute;fense</h3>
-                <p>Combat.AI d&eacute;tecte aussi ta garde haute. Attaque + d&eacute;fense = vrai boxeur.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">&#x1F4CA;</div>
-                <h3>Export session</h3>
-                <p>T&eacute;l&eacute;charge tes stats en JSON apr&egrave;s chaque session. Suis ta progression dans le temps.</p>
-            </div>
-        </div>
-    </section>
+    // Waitlist form → Cloudflare Worker → Brevo API
+    const waitlistForm = document.getElementById('waitlist-form');
+    const successMsg = document.getElementById('waitlist-success');
+    const errorMsg = document.getElementById('waitlist-error');
 
-    <!-- TECHNIQUES -->
-    <section class="techniques" id="techniques">
-        <div class="techniques-inner">
-            <div class="section-title">
-                <h2>Techniques analys&eacute;es</h2>
-                <p>4 coups fondamentaux d&eacute;tect&eacute;s par l'IA</p>
-            </div>
-            <div class="tech-list">
-                <div class="tech-item">
-                    <div class="tech-emoji">&#x1F44A;</div>
-                    <div class="tech-name">JAB</div>
-                    <div class="tech-desc">Direct avant rapide, bras avant tendu</div>
-                </div>
-                <div class="tech-item">
-                    <div class="tech-emoji">&#x1F4A5;</div>
-                    <div class="tech-name">CROSS</div>
-                    <div class="tech-desc">Direct arri&egrave;re puissant, rotation des hanches</div>
-                </div>
-                <div class="tech-item">
-                    <div class="tech-emoji">&#x1F300;</div>
-                    <div class="tech-name">CROCHET</div>
-                    <div class="tech-desc">Coup circulaire, coude pli&eacute;, mouvement lat&eacute;ral</div>
-                </div>
-                <div class="tech-item">
-                    <div class="tech-emoji">&#x1F525;</div>
-                    <div class="tech-name">UPPERCUT</div>
-                    <div class="tech-desc">Coup montant, remontée explosive du poing</div>
-                </div>
-            </div>
-        </div>
-    </section>
+    waitlistForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email-input').value.trim();
+      if (!email) return;
 
-    <!-- HOW IT WORKS -->
-    <section class="how-it-works" id="how">
-        <div class="section-title">
-            <h2>Comment &ccedil;a marche</h2>
-            <p>3 &eacute;tapes, z&eacute;ro installation</p>
-        </div>
-        <div class="steps">
-            <div class="step">
-                <div class="step-number">01</div>
-                <div class="step-content">
-                    <h3>Ouvre ton navigateur</h3>
-                    <p>Pas d'app &agrave; t&eacute;l&eacute;charger. Chrome, Firefox, Safari... Combat.AI tourne directement dans ton navigateur avec ta webcam.</p>
-                </div>
-            </div>
-            <div class="step">
-                <div class="step-number">02</div>
-                <div class="step-content">
-                    <h3>Lance un round</h3>
-                    <p>Choisis le nombre de rounds, la difficult&eacute;, et c'est parti. L'IA d&eacute;tecte ta pose et analyse chaque mouvement.</p>
-                </div>
-            </div>
-            <div class="step">
-                <div class="step-number">03</div>
-                <div class="step-content">
-                    <h3>Progresse</h3>
-                    <p>Apr&egrave;s chaque session, consulte tes stats : score moyen, meilleur combo, techniques pr&eacute;f&eacute;r&eacute;es. Exporte et compare.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+      const btn = waitlistForm.querySelector('button');
+      btn.textContent = '...';
+      btn.disabled = true;
+      errorMsg.style.display = 'none';
 
-    <!-- WAITLIST -->
-    <section class="waitlist" id="waitlist">
-        <div class="waitlist-box">
-            <h2>Rejoins la waitlist</h2>
-            <p>Sois parmi les premiers &agrave; acc&eacute;der &agrave; la version compl&egrave;te avec suivi de progression, coaching personnalis&eacute; et plus.</p>
-
-            <form class="waitlist-form" id="waitlist-form">
-                <input type="email" id="email-input" placeholder="ton@email.com" required>
-                <button type="submit">J'embarque</button>
-            </form>
-
-            <div id="waitlist-success">&#x2705; Tu es sur la liste ! On te contacte bient&ocirc;t.</div>
-
-            <div class="waitlist-count">D&eacute;j&agrave; <span id="signup-count">0</span> inscrits</div>
-        </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer>
-        <div class="footer-logo">COMBAT.AI</div>
-        <p>Built by Norman &mdash; POC 2025</p>
-    </footer>
-
-    <script>
-        // Smooth scroll
-        document.querySelectorAll('a[href^="#"]').forEach(a => {
-            a.addEventListener('click', (e) => {
-                e.preventDefault();
-                const target = document.querySelector(a.getAttribute('href'));
-                if (target) target.scrollIntoView({ behavior: 'smooth' });
-            });
+      try {
+        const response = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
         });
 
-        // Waitlist form - stockage local (pas de backend)
-        const waitlistForm = document.getElementById('waitlist-form');
-        const successMsg = document.getElementById('waitlist-success');
-        const signupCountEl = document.getElementById('signup-count');
+        const data = await response.json();
 
-        // Charger compteur existant
-        let signups = JSON.parse(localStorage.getItem('combatai_signups') || '[]');
-        signupCountEl.textContent = signups.length;
+        if (response.ok && data.success) {
+          waitlistForm.style.display = 'none';
+          successMsg.style.display = 'block';
+          const newCount = localCount + 1;
+          localStorage.setItem('combatai_count', newCount);
+          signupCountEl.textContent = newCount;
+        } else {
+          throw new Error(data.error || 'Erreur serveur');
+        }
+      } catch (err) {
+        console.error('Waitlist error:', err);
+        errorMsg.style.display = 'block';
+        btn.textContent = "J'embarque";
+        btn.disabled = false;
+      }
+    });
 
-        waitlistForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email-input').value.trim();
-
-            if (email) {
-                signups.push({ email, date: new Date().toISOString() });
-                localStorage.setItem('combatai_signups', JSON.stringify(signups));
-                signupCountEl.textContent = signups.length;
-
-                waitlistForm.style.display = 'none';
-                successMsg.style.display = 'block';
-            }
-        });
-
-        // Nav scroll effect
-        window.addEventListener('scroll', () => {
-            const nav = document.querySelector('nav');
-            nav.style.borderBottomColor = window.scrollY > 50
-                ? 'rgba(255,255,255,0.08)'
-                : 'transparent';
-        });
-    </script>
+    // Nav scroll effect
+    window.addEventListener('scroll', () => {
+      const nav = document.querySelector('nav');
+      nav.style.borderBottomColor = window.scrollY > 50
+        ? 'rgba(255,255,255,0.08)'
+        : 'transparent';
+    });
+</script>
 </body>
 </html>
