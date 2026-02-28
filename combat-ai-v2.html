@@ -1989,7 +1989,7 @@
                 total_punches: state.punchCount,
                 avg_score: avgScore,
                 max_combo: state.maxCombo,
-                best_speed: state.speeds.length > 0 ? Math.max(...state.speeds).toFixed(1) : 0,
+                best_speed: state.speeds.length > 0 ? parseFloat(Math.max(...state.speeds).toFixed(1)) : 0,
                 best_score: state.scores.length > 0 ? Math.max(...state.scores) : 0,
                 defense_count: state.defenseCount,
                 techniques: state.techniques,

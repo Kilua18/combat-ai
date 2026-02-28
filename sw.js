@@ -2,7 +2,7 @@
 // Cache l'app HTML pour un accès offline rapide.
 // Les ressources CDN (MediaPipe) restent chargées depuis le réseau.
 
-const CACHE_NAME = 'combat-ai-v3';
+const CACHE_NAME = 'combat-ai-v4';
 const APP_SHELL = [
     'combat-ai-v2.html',
     'manifest.json',
