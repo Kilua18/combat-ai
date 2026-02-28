@@ -728,9 +728,90 @@
             #technique-name { font-size: 30px; }
         }
 
-    </style>
+    
+        /* ===== REPLAY VIDEO ===== */
+        #replay-section {
+            margin-top: 24px;
+            width: 100%;
+            max-width: 420px;
+            background: rgba(0,255,136,0.05);
+            border: 1px solid rgba(0,255,136,0.2);
+            border-radius: 12px;
+            padding: 16px;
+            display: none;
+        }
+        #replay-section.visible { display: block; }
+        #replay-section h3 {
+            font-family: 'Orbitron', monospace;
+            color: #00ff88;
+            font-size: 14px;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        #replay-video {
+            width: 100%;
+            border-radius: 8px;
+            background: #000;
+        }
+        .replay-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            justify-content: center;
+        }
+        .replay-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: 'Orbitron', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        #btn-download-replay {
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            color: #000;
+        }
+        #btn-download-replay:hover { transform: scale(1.05); }
+        #btn-replay-again {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+        }
+        #btn-replay-again:hover { border-color: #00ff88; color: #00ff88; }
+        #rec-indicator {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,0,0,0.9);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+        #rec-indicator.visible { display: flex; }
+        #rec-indicator::before {
+            content: '';
+            width: 8px; height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+        </style>
 </head>
 <body>
+        <div id="rec-indicator">&#9210; REC</div>
     <div id="container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
@@ -903,6 +984,16 @@
             <div class="end-buttons">
                 <button class="end-btn end-btn-primary" id="restart-btn">REJOUER</button>
                 <button class="end-btn end-btn-secondary" id="export-btn">EXPORTER</button>
+
+            <!-- REPLAY VIDEO SECTION -->
+            <div id="replay-section">
+                <h3>&#9654; REVOIR TA SESSION</h3>
+                <video id="replay-video" controls playsinline></video>
+                <div class="replay-actions">
+                    <button class="replay-btn" id="btn-download-replay">&#11015; T&eacute;l&eacute;charger</button>
+                    <button class="replay-btn" id="btn-replay-again">&#8634; Rejouer</button>
+                </div>
+            </div>
             </div>
         </div>
     </div>
@@ -1210,6 +1301,8 @@
             state.history = [];
             state.paused = false;
             state.rightWristHistory = [];
+            // Start recording
+            if (video.srcObject) startRecording(video.srcObject);
             state.leftWristHistory = [];
             state.rightArmPhase = 'idle';
             state.leftArmPhase = 'idle';
@@ -1828,6 +1921,8 @@
         function endSession() {
             clearInterval(state.timerInterval);
             state.started = false;
+            // Stop recording
+            stopRecording();
 
             const duration = Math.round((Date.now() - state.sessionStart) / 1000);
             const avgScore = state.scores.length > 0
@@ -1983,6 +2078,88 @@
                 window.location.reload();
             });
         }
-    </script>
+    
+        // ===== ENREGISTREMENT VIDEO SESSION =====
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let replayBlobUrl = null;
+        const recIndicator = document.getElementById('rec-indicator');
+        const replaySection = document.getElementById('replay-section');
+        const replayVideo = document.getElementById('replay-video');
+        const btnDownloadReplay = document.getElementById('btn-download-replay');
+        const btnReplayAgain = document.getElementById('btn-replay-again');
+
+        function startRecording(stream) {
+            recordedChunks = [];
+            if (replayBlobUrl) {
+                URL.revokeObjectURL(replayBlobUrl);
+                replayBlobUrl = null;
+            }
+            replaySection.classList.remove('visible');
+            replayVideo.src = '';
+
+            // Prefer mp4 if available, fallback to webm
+            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=h264')
+                ? 'video/mp4;codecs=h264'
+                : MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                    ? 'video/webm;codecs=vp9'
+                    : 'video/webm';
+
+            try {
+                mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2500000 });
+            } catch(e) {
+                mediaRecorder = new MediaRecorder(stream);
+            }
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                recIndicator.classList.remove('visible');
+                if (recordedChunks.length === 0) return;
+                const ext = mediaRecorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
+                const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
+                replayBlobUrl = URL.createObjectURL(blob);
+                replayVideo.src = replayBlobUrl;
+                replayVideo.load();
+
+                // Set download filename with date
+                const dateStr = new Date().toISOString().slice(0,19).replace(/[T:]/g,'-');
+                btnDownloadReplay.setAttribute('data-filename', `combat-ai-session-${dateStr}.${ext}`);
+                btnDownloadReplay.setAttribute('data-url', replayBlobUrl);
+
+                replaySection.classList.add('visible');
+                replayVideo.play().catch(() => {});
+            };
+
+            mediaRecorder.start(1000); // chunk every 1s
+            recIndicator.classList.add('visible');
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+        }
+
+        // Download replay
+        btnDownloadReplay.addEventListener('click', () => {
+            const url = btnDownloadReplay.getAttribute('data-url');
+            const filename = btnDownloadReplay.getAttribute('data-filename') || 'combat-ai-session.webm';
+            if (!url) return;
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+        });
+
+        // Replay again
+        btnReplayAgain.addEventListener('click', () => {
+            replayVideo.currentTime = 0;
+            replayVideo.play();
+        });
+
+        </script>
 </body>
 </html>
