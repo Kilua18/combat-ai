@@ -1815,33 +1815,97 @@
             URL.revokeObjectURL(url);
         }
 
-        // ===== CAMERA (adaptatif mobile/desktop) =====
+        // ===== CAMERA (v2.4 — robuste Z Fold / mobile) =====
         const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-        const camWidth = isMobile ? 640 : 1280;
+        const camWidth  = isMobile ? 640 : 1280;
         const camHeight = isMobile ? 480 : 720;
 
-        // Sur mobile: camera arriere par defaut, mais on utilise la frontale
-        const cameraConfig = {
-            onFrame: async () => {
-                await pose.send({ image: video });
-            },
-            width: camWidth,
-            height: camHeight
-        };
-
-        // Forcer camera frontale sur mobile
-        if (isMobile) {
-            cameraConfig.facingMode = 'user';
+        // Affiche une erreur visible a l'ecran (pas juste dans la console)
+        function showCameraError(msg) {
+            const el = document.createElement('div');
+            el.style.cssText = [
+                'position:fixed', 'inset:0', 'z-index:999',
+                'background:rgba(0,0,0,0.92)',
+                'display:flex', 'flex-direction:column',
+                'align-items:center', 'justify-content:center',
+                'padding:30px', 'text-align:center'
+            ].join(';');
+            el.innerHTML = `
+                <div style="font-family:Orbitron,monospace;font-size:28px;color:#ff4444;margin-bottom:16px;">
+                    ERREUR CAMÉRA
+                </div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:17px;color:#ccc;max-width:380px;line-height:1.6;">
+                    ${msg}
+                </div>
+                <button onclick="location.reload()" style="
+                    margin-top:28px;padding:14px 40px;
+                    font-family:Orbitron,monospace;font-size:16px;font-weight:700;
+                    background:linear-gradient(135deg,#00ff88,#00ccff);
+                    border:none;border-radius:10px;color:#000;cursor:pointer;">
+                    RÉESSAYER
+                </button>`;
+            document.body.appendChild(el);
         }
 
-        const camera = new Camera(video, cameraConfig);
+        // Vérifie HTTPS (obligatoire pour getUserMedia hors localhost)
+        const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (!isSecure) {
+            showCameraError(
+                'La caméra nécessite <strong>HTTPS</strong>.<br><br>' +
+                'Ouvre l\'application via un lien <strong>https://</strong> ' +
+                'ou depuis GitHub Pages.'
+            );
+        } else {
+            // Fallback manuel getUserMedia → boucle requestAnimationFrame pour MediaPipe
+            async function startCameraFallback() {
+                try {
+                    const constraints = {
+                        video: {
+                            facingMode: { ideal: 'user' },
+                            width:  { ideal: camWidth },
+                            height: { ideal: camHeight }
+                        }
+                    };
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    video.srcObject = stream;
+                    await video.play();
 
-        camera.start().then(() => {
-            console.log(`Combat.AI v2.4 initialized (${isMobile ? 'mobile' : 'desktop'} ${camWidth}x${camHeight})`);
-        }).catch(err => {
-            console.error('Camera error:', err);
-            document.getElementById('status') && (document.getElementById('status').textContent = 'ERREUR CAMERA');
-        });
+                    const loop = async () => {
+                        if (video.readyState >= 2) {
+                            await pose.send({ image: video });
+                        }
+                        requestAnimationFrame(loop);
+                    };
+                    requestAnimationFrame(loop);
+                    console.log('Combat.AI v2.4 — fallback getUserMedia OK');
+                } catch (err2) {
+                    console.error('Fallback camera error:', err2);
+                    showCameraError(
+                        'Impossible d\'accéder à la caméra.<br><br>' +
+                        'Vérifie les permissions caméra dans Chrome<br>' +
+                        '(icône 🔒 → Caméra → Autoriser) puis recharge.'
+                    );
+                }
+            }
+
+            // Tentative principale : MediaPipe Camera utility
+            const cameraConfig = {
+                onFrame: async () => { await pose.send({ image: video }); },
+                width: camWidth,
+                height: camHeight,
+                ...(isMobile && { facingMode: 'user' })
+            };
+
+            const camera = new Camera(video, cameraConfig);
+            camera.start()
+                .then(() => {
+                    console.log(`Combat.AI v2.4 initialized (${isMobile ? 'mobile' : 'desktop'} ${camWidth}x${camHeight})`);
+                })
+                .catch(err => {
+                    console.warn('MediaPipe Camera failed, trying fallback...', err);
+                    startCameraFallback();
+                });
+        }
     </script>
 </body>
 </html>
