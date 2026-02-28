@@ -255,73 +255,71 @@
   <p>Built by Norman &mdash; POC 2025</p>
 </footer>
 <script>
-  // ─── CONFIG BREVO ──────────────────────────────────────────────
-  const BREVO_API_KEY = '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';  // ← REMPLACE ICI
-  const BREVO_LIST_ID = 2;                          // ← VÉRIFIE L'ID DANS BREVO
-  // ───────────────────────────────────────────────────────────────
-  // Smooth scroll  
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', (e) => {
-      e.preventDefault();
-      const target = document.querySelector(a.getAttribute('href'));
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
-    });
-  });
-  // Compteur d'inscrits (côté client, approximatif)
-  const signupCountEl = document.getElementById('signup-count');
-  const localCount = parseInt(localStorage.getItem('combatai_count') || '0');
-  signupCountEl.textContent = localCount;
-  // Waitlist form → Brevo API
-  const waitlistForm = document.getElementById('waitlist-form');
-  const successMsg   = document.getElementById('waitlist-success');
-  const errorMsg     = document.getElementById('waitlist-error');
-  waitlistForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email-input').value.trim();
-    if (!email) return;
-    const btn = waitlistForm.querySelector('button');
-    btn.textContent = '...';
-    btn.disabled = true;
-    errorMsg.style.display = 'none';
-    try {
-      const response = await fetch('https://api.brevo.com/v3/contacts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': BREVO_API_KEY
-        },
-        body: JSON.stringify({
-          email: email,
-          listIds: [BREVO_LIST_ID],
-          updateEnabled: true
-        })
+      // ─── WAITLIST via Cloudflare Worker ──────────────────────────
+    const WORKER_URL = 'https://combat-ai-waitlist.kkamagra18.workers.dev';
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
       });
-      // 201 = créé, 204 = déjà existant mis à jour — les deux sont OK
-      if (response.status === 201 || response.status === 204) {
-        waitlistForm.style.display = 'none';
-        successMsg.style.display = 'block';
-        const newCount = localCount + 1;
-        localStorage.setItem('combatai_count', newCount);
-        signupCountEl.textContent = newCount;
-      } else {
-        
+    });
+
+    // Compteur d'inscrits (côté client, approximatif)
+    const signupCountEl = document.getElementById('signup-count');
+    const localCount = parseInt(localStorage.getItem('combatai_count') || '0');
+    signupCountEl.textContent = localCount;
+
+    // Waitlist form → Cloudflare Worker → Brevo API
+    const waitlistForm = document.getElementById('waitlist-form');
+    const successMsg = document.getElementById('waitlist-success');
+    const errorMsg = document.getElementById('waitlist-error');
+
+    waitlistForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email-input').value.trim();
+      if (!email) return;
+
+      const btn = waitlistForm.querySelector('button');
+      btn.textContent = '...';
+      btn.disabled = true;
+      errorMsg.style.display = 'none';
+
+      try {
+        const response = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        });
+
         const data = await response.json();
-        throw new Error(data.message || 'Erreur API Brevo');
+
+        if (response.ok && data.success) {
+          waitlistForm.style.display = 'none';
+          successMsg.style.display = 'block';
+          const newCount = localCount + 1;
+          localStorage.setItem('combatai_count', newCount);
+          signupCountEl.textContent = newCount;
+        } else {
+          throw new Error(data.error || 'Erreur serveur');
+        }
+      } catch (err) {
+        console.error('Waitlist error:', err);
+        errorMsg.style.display = 'block';
+        btn.textContent = "J'embarque";
+        btn.disabled = false;
       }
-    } catch (err) {
-      console.error('Waitlist error:', err);
-      errorMsg.style.display = 'block';
-      btn.textContent = "J'embarque";
-      btn.disabled = false;
-    }
-  });
-  // Nav scroll effect
-  window.addEventListener('scroll', () => {
-    const nav = document.querySelector('nav');
-    nav.style.borderBottomColor = window.scrollY > 50
-      ? 'rgba(255,255,255,0.08)'
-      : 'transparent';
-  });
+    });
+
+    // Nav scroll effect
+    window.addEventListener('scroll', () => {
+      const nav = document.querySelector('nav');
+      nav.style.borderBottomColor = window.scrollY > 50
+        ? 'rgba(255,255,255,0.08)'
+        : 'transparent';
+    });
 </script>
 </body>
 </html>
