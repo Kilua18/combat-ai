@@ -845,6 +845,12 @@
                 <button class="diff-btn active" data-mode="combo">Combos</button>
             </div>
 
+            <div style="color:#888; margin-bottom:10px; font-size:14px; letter-spacing:2px;">STANCE</div>
+            <div class="difficulty-select">
+                <button class="diff-btn active" data-stance="orthodox">Droitier</button>
+                <button class="diff-btn" data-stance="southpaw">Gaucher</button>
+            </div>
+
             <div style="color:#888; margin-bottom:10px; font-size:14px; letter-spacing:2px;">SENSIBILIT&Eacute;</div>
             <div class="difficulty-select">
                 <button class="diff-btn" data-diff="easy">Facile</button>
@@ -983,6 +989,9 @@
 
             <div class="end-techniques" id="end-techniques"></div>
 
+            <!-- HISTORIQUE SESSIONS -->
+            <div id="session-history" style="margin-top:20px; width:100%; max-width:500px;"></div>
+
             <div class="end-buttons">
                 <button class="end-btn end-btn-primary" id="restart-btn">REJOUER</button>
                 <button class="end-btn end-btn-secondary" id="export-btn">EXPORTER</button>
@@ -1068,6 +1077,7 @@
             lastFrameTime: 0,
             fps: 30,
             mode: 'combo',
+            stance: 'orthodox', // orthodox = droitier (left=jab), southpaw = gaucher (right=jab)
             debugMode: false
         };
 
@@ -1140,6 +1150,27 @@
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
             osc.start(audioCtx.currentTime);
             osc.stop(audioCtx.currentTime + 0.15);
+        }
+
+        // Son de coup detecte (feedback instantane)
+        function playPunchSound(score) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            // Frequence proportionnelle au score (coup faible = grave, coup fort = aigu)
+            const freq = score >= 75 ? 880 : score >= 50 ? 660 : 440;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            const vol = score >= 75 ? 0.35 : score >= 50 ? 0.25 : 0.15;
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.12);
+            // Vibration sur mobile (courte pour faible, longue pour fort)
+            if (navigator.vibrate) {
+                navigator.vibrate(score >= 75 ? [60, 30, 60] : score >= 50 ? 40 : 20);
+            }
         }
 
         function playComboSuccess() {
@@ -1280,6 +1311,15 @@
                 document.querySelectorAll('.diff-btn[data-diff]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 state.difficulty = btn.dataset.diff;
+            });
+        });
+
+        // Stance (droitier/gaucher)
+        document.querySelectorAll('.diff-btn[data-stance]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.diff-btn[data-stance]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.stance = btn.dataset.stance;
             });
         });
 
@@ -1722,6 +1762,9 @@
             const nDirX = dirMag > 0 ? dirX / dirMag : 0;
             const nDirY = dirMag > 0 ? dirY / dirMag : 0;
 
+            // Stance: orthodox (droitier) = left=jab, southpaw (gaucher) = right=jab
+            const isJabSide = state.stance === 'southpaw' ? side === 'right' : side === 'left';
+
             // UPPERCUT: mouvement principalement vers le HAUT (dirY tres negatif)
             // + coude plie (< 110 degres)
             if (nDirY < -0.6 && elbowAngle < 115) {
@@ -1734,24 +1777,20 @@
                 return side === 'left' ? 'CROCHET G' : 'CROCHET D';
             }
 
-            // JAB: bras AVANT (gauche pour droitier), extension large, bras tendu
-            // CROSS: bras ARRIERE (droit pour droitier), plus puissant
+            // JAB: bras AVANT, extension large, bras tendu
+            // CROSS: bras ARRIERE, plus puissant
             if (extH >= config.extensionMin && elbowAngle > 125) {
-                // Distinguer jab vs cross par la vitesse et l'extension
-                // Le cross est generalement plus puissant
-                if (side === 'left') return 'JAB';
-                return 'CROSS';
+                return isJabSide ? 'JAB' : 'CROSS';
             }
 
             // Si extension moyenne mais bras pas completement tendu
             if (extH >= config.extensionMin * 0.6 && elbowAngle > 100) {
-                if (side === 'left') return 'JAB';
-                return 'CROSS';
+                return isJabSide ? 'JAB' : 'CROSS';
             }
 
             // Fallback: coup detecte mais criteres incomplets -> JAB/CROSS selon le cote
             // (v2.4 fix #7 : jamais return null, zero coup perdu silencieusement)
-            return side === 'left' ? 'JAB' : 'CROSS';
+            return isJabSide ? 'JAB' : 'CROSS';
         }
 
         // ===== DEFENSE DETECTION (v2.4 - delai 12 frames ~0.4s) =====
@@ -1805,6 +1844,9 @@
 
             state.scores.push(finalScore);
             state.speeds.push(speedMs);
+
+            // Feedback sonore + vibration
+            playPunchSound(finalScore);
 
             // Force estimee (combine vitesse + extension)
             // Echelle: Faible < 3, Moyen 3-6, Fort 6-9, Devastateur 9+
@@ -1961,6 +2003,10 @@
             document.getElementById('control-buttons').classList.remove('visible');
             comboCallerEl.classList.remove('visible');
             clearTimeout(comboState.timeout);
+            // Sauvegarder dans l'historique localStorage
+            saveSessionToHistory();
+            renderSessionHistory();
+
             endScreen.classList.add('visible');
         }
 
@@ -1970,6 +2016,65 @@
             historyPanel.innerHTML = '';
             startSession();
         });
+
+        // ===== SESSION HISTORY (localStorage) =====
+        function saveSessionToHistory() {
+            const duration = Math.round((Date.now() - state.sessionStart) / 1000);
+            const avgScore = state.scores.length > 0
+                ? Math.round(state.scores.reduce((a, b) => a + b, 0) / state.scores.length)
+                : 0;
+            const session = {
+                date: new Date().toISOString(),
+                duration,
+                difficulty: state.difficulty,
+                stance: state.stance,
+                punches: state.punchCount,
+                avg_score: avgScore,
+                max_combo: state.maxCombo,
+                best_speed: state.speeds.length > 0 ? parseFloat(Math.max(...state.speeds).toFixed(1)) : 0,
+                defense: state.defenseCount,
+                techniques: { ...state.techniques }
+            };
+            try {
+                const history = JSON.parse(localStorage.getItem('combatai_sessions') || '[]');
+                history.push(session);
+                // Garder les 50 dernieres sessions max
+                if (history.length > 50) history.splice(0, history.length - 50);
+                localStorage.setItem('combatai_sessions', JSON.stringify(history));
+            } catch (e) { /* localStorage plein ou indisponible */ }
+        }
+
+        function renderSessionHistory() {
+            const container = document.getElementById('session-history');
+            if (!container) return;
+            try {
+                const history = JSON.parse(localStorage.getItem('combatai_sessions') || '[]');
+                if (history.length < 2) { container.innerHTML = ''; return; }
+                // Afficher les 5 dernieres sessions (sans la courante qui est la derniere)
+                const recent = history.slice(-6, -1).reverse();
+                const prev = history[history.length - 2];
+                const curr = history[history.length - 1];
+                const trend = curr.avg_score > prev.avg_score ? '↑' : curr.avg_score < prev.avg_score ? '↓' : '=';
+                const trendColor = trend === '↑' ? '#00ff88' : trend === '↓' ? '#ff4444' : '#888';
+                container.innerHTML = `
+                    <div style="font-family:Orbitron,monospace;font-size:14px;color:#888;margin-bottom:10px;letter-spacing:2px;">
+                        PROGRESSION <span style="color:${trendColor};font-size:18px;">${trend}</span>
+                    </div>
+                    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                        ${recent.map(s => {
+                            const c = s.avg_score >= 60 ? '#00ff88' : s.avg_score >= 40 ? '#ffcc00' : '#ff4444';
+                            const d = new Date(s.date);
+                            const label = `${d.getDate()}/${d.getMonth()+1}`;
+                            return `<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;text-align:center;min-width:60px;">
+                                <div style="font-size:18px;font-weight:700;color:${c};">${s.avg_score}</div>
+                                <div style="font-size:10px;color:#666;">${label}</div>
+                                <div style="font-size:10px;color:#555;">${s.punches}x</div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                `;
+            } catch (e) { container.innerHTML = ''; }
+        }
 
         // ===== EXPORT =====
         document.getElementById('export-btn').addEventListener('click', exportSession);
