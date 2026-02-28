@@ -918,14 +918,6 @@
             <div id="defense-text">GUARD UP</div>
         </div>
 
-        <!-- DEBUG OVERLAY -->
-        <div id="debug-overlay" style="
-            position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
-            background:rgba(0,0,0,0.75); border:1px solid #444; border-radius:8px;
-            padding:8px 16px; font-family:monospace; font-size:13px; color:#fff;
-            z-index:30; pointer-events:none; display:none; text-align:center; white-space:nowrap;
-        "></div>
-
         <!-- CONTROL BUTTONS -->
         <div id="control-buttons">
             <button class="ctrl-btn" id="btn-pause" title="Pause">⏸</button>
@@ -935,7 +927,7 @@
         <!-- HUD BOTTOM -->
         <div id="hud-bottom" style="display:none;">
             <div id="history-panel"></div>
-            <div id="branding">COMBAT.AI v2</div>
+            <div id="branding">COMBAT.AI v2.4</div>
         </div>
 
         <!-- PAUSE OVERLAY -->
@@ -945,6 +937,16 @@
                 <button class="pause-btn pause-btn-resume" id="btn-resume">REPRENDRE</button>
                 <button class="pause-btn pause-btn-stop" id="btn-end-session">ARR&Ecirc;TER</button>
             </div>
+        </div>
+
+        <!-- DEBUG OVERLAY (touche D) -->
+        <div id="debug-overlay" style="display:none; position:absolute; top:120px; left:20px; z-index:30; background:rgba(0,0,0,0.85); border:1px solid #00ff88; border-radius:8px; padding:10px 14px; font-family:monospace; font-size:13px; color:#00ff88; pointer-events:none; line-height:1.8;">
+            <div style="color:#fff; font-weight:bold; margin-bottom:4px;">DEBUG v2.4</div>
+            <div>hipY&nbsp;&nbsp;&nbsp;: <span id="dbg-hipy">---</span></div>
+            <div>torso&nbsp;&nbsp;: <span id="dbg-torso">---</span></div>
+            <div>kneeVis: <span id="dbg-kneevis">---</span></div>
+            <div>standing: <span id="dbg-standing">---</span></div>
+            <div>defFrm&nbsp;: <span id="dbg-deffrm">---</span></div>
         </div>
 
         <!-- END SCREEN -->
@@ -1018,7 +1020,7 @@
         // Minimum de frames a accumuler avant de valider un coup
         const MIN_MOTION_FRAMES = 1;
         // Seuil pour considerer que la personne est debout (ratio hanches/epaules)
-        const STANDING_THRESHOLD = 0.15;
+        const STANDING_THRESHOLD = 0.08;
 
         // ===== STATE =====
         let state = {
@@ -1041,6 +1043,7 @@
             techniques: { jab: 0, cross: 0, crochet: 0, uppercut: 0 },
             defenseCount: 0,
             isDefending: false,
+            defenseFrameCount: 0,
             isStanding: false,
             history: [],
             sessionStart: null,
@@ -1064,7 +1067,8 @@
             frameTimestamp: 0,
             lastFrameTime: 0,
             fps: 30,
-            mode: 'combo'
+            mode: 'combo',
+            debugMode: false
         };
 
         // ===== DOM ELEMENTS =====
@@ -1298,6 +1302,7 @@
             state.speeds = [];
             state.techniques = { jab: 0, cross: 0, crochet: 0, uppercut: 0 };
             state.defenseCount = 0;
+            state.defenseFrameCount = 0;
             state.history = [];
             state.paused = false;
             state.rightWristHistory = [];
@@ -1414,8 +1419,9 @@
             }
             // Touche D = toggle debug overlay
             if (e.code === 'KeyD') {
+                state.debugMode = !state.debugMode;
                 const dbg = document.getElementById('debug-overlay');
-                if (dbg) dbg.style.display = dbg.style.display === 'none' ? 'block' : 'none';
+                if (dbg) dbg.style.display = state.debugMode ? 'block' : 'none';
             }
         });
 
@@ -1541,18 +1547,6 @@
 
             let isStanding = goodTorso && (kneesDetected || hipsLow);
 
-            // DEBUG: affiche les valeurs brutes en bas de l'ecran
-            const dbg = document.getElementById('debug-overlay');
-            if (dbg && dbg.style.display !== 'none') {
-                dbg.innerHTML =
-                    `hipY=<b style="color:#ffcc00">${hipY.toFixed(2)}</b> | ` +
-                    `torso=<b style="color:#ffcc00">${torsoLength.toFixed(2)}</b> | ` +
-                    `kneeVis=<b style="color:#ffcc00">${kneeVisibility.toFixed(2)}</b> | ` +
-                    `leg=<b style="color:#ffcc00">${legLength.toFixed(2)}</b> | ` +
-                    `hipsLow=<b style="color:#ffcc00">${(hipY > 0.50 ? 'OUI' : 'NON')}</b> | ` +
-                    `standing=<b style="${isStanding ? 'color:#00ff88' : 'color:#ff4444'}">${isStanding ? 'OUI' : 'NON'}</b>`;
-            }
-
             if (state.isStanding !== isStanding) {
                 state.isStanding = isStanding;
                 if (isStanding) {
@@ -1562,6 +1556,15 @@
                     postureStatus.textContent = 'LEVE-TOI';
                     postureStatus.style.color = '#ff4444';
                 }
+            }
+
+            // Mise a jour du debug overlay si actif
+            if (state.debugMode) {
+                document.getElementById('dbg-hipy').textContent    = hipY.toFixed(3);
+                document.getElementById('dbg-torso').textContent   = torsoLength.toFixed(3);
+                document.getElementById('dbg-kneevis').textContent = kneeVisibility.toFixed(3);
+                document.getElementById('dbg-standing').textContent = isStanding ? 'OUI' : 'NON';
+                document.getElementById('dbg-deffrm').textContent  = state.defenseFrameCount;
             }
 
             return isStanding;
@@ -1746,39 +1749,32 @@
                 return 'CROSS';
             }
 
-            // Fallback: mouvement detecte mais criteres stricts pas atteints
-            // On classe quand meme selon le cote plutot que de perdre le coup
-            if (extH >= config.extensionMin * 0.4 || elbowAngle > 90) {
-                if (side === 'left') return 'JAB';
-                return 'CROSS';
-            }
-
-            return null;
+            // Fallback: coup detecte mais criteres incomplets -> JAB/CROSS selon le cote
+            // (v2.4 fix #7 : jamais return null, zero coup perdu silencieusement)
+            return side === 'left' ? 'JAB' : 'CROSS';
         }
 
-        // ===== DEFENSE DETECTION (v2.4 - anti-faux-positifs) =====
-        // Garde haute = mains proches du visage, au dessus des epaules, tenues pendant 0.5s
-        let defenseHoldFrames = 0;
-        const DEFENSE_HOLD_REQUIRED = 12; // ~0.4s a 30fps
-
+        // ===== DEFENSE DETECTION (v2.4 - delai 12 frames ~0.4s) =====
         function detectDefense(leftW, rightW, nose, leftS, rightS) {
-            const leftNearFace  = Math.abs(leftW.x  - nose.x) < 0.10 && leftW.y  < nose.y + 0.10;
-            const rightNearFace = Math.abs(rightW.x - nose.x) < 0.10 && rightW.y < nose.y + 0.10;
-            const leftHandUp    = leftW.y  < leftS.y  - 0.02;
-            const rightHandUp   = rightW.y < rightS.y - 0.02;
+            // Les DEUX mains doivent etre hautes et pres du visage
+            const leftNearFace = Math.abs(leftW.x - nose.x) < 0.12 && Math.abs(leftW.y - nose.y) < 0.15;
+            const rightNearFace = Math.abs(rightW.x - nose.x) < 0.12 && Math.abs(rightW.y - nose.y) < 0.15;
+            const leftHandUp = leftW.y < leftS.y;
+            const rightHandUp = rightW.y < rightS.y;
 
             const defending = leftNearFace && rightNearFace && leftHandUp && rightHandUp;
 
             if (defending) {
-                defenseHoldFrames++;
-                if (defenseHoldFrames === DEFENSE_HOLD_REQUIRED && !state.isDefending) {
+                state.defenseFrameCount++;
+                // Declenchement seulement apres 12 frames tenues (~0.4s a 30fps)
+                if (state.defenseFrameCount >= 12 && !state.isDefending) {
                     state.defenseCount++;
                     state.isDefending = true;
                     defenseIndicator.classList.add('visible');
-                    document.getElementById('defense-text').textContent = '🛡 GARDE HAUTE';
+                    document.getElementById('defense-text').textContent = 'GARDE HAUTE';
                 }
             } else {
-                defenseHoldFrames = 0;
+                state.defenseFrameCount = 0;
                 if (state.isDefending) {
                     state.isDefending = false;
                     defenseIndicator.classList.remove('visible');
@@ -2009,27 +2005,97 @@
             URL.revokeObjectURL(url);
         }
 
-        // ===== CAMERA (adaptatif mobile/desktop) =====
+        // ===== CAMERA (v2.4 — robuste Z Fold / mobile + PWA) =====
         let currentFacingMode = 'user'; // camera frontale par defaut
         let camera = null;
 
         const cameraError = document.getElementById('camera-error');
         const cameraErrorMsg = document.getElementById('camera-error-msg');
 
+        // Affiche une erreur visible a l'ecran (fullscreen overlay pour erreurs critiques)
+        function showCameraError(msg) {
+            const el = document.createElement('div');
+            el.style.cssText = [
+                'position:fixed', 'inset:0', 'z-index:999',
+                'background:rgba(0,0,0,0.92)',
+                'display:flex', 'flex-direction:column',
+                'align-items:center', 'justify-content:center',
+                'padding:30px', 'text-align:center'
+            ].join(';');
+            el.innerHTML = `
+                <div style="font-family:Orbitron,monospace;font-size:28px;color:#ff4444;margin-bottom:16px;">
+                    ERREUR CAMERA
+                </div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:17px;color:#ccc;max-width:380px;line-height:1.6;">
+                    ${msg}
+                </div>
+                <button onclick="location.reload()" style="
+                    margin-top:28px;padding:14px 40px;
+                    font-family:Orbitron,monospace;font-size:16px;font-weight:700;
+                    background:linear-gradient(135deg,#00ff88,#00ccff);
+                    border:none;border-radius:10px;color:#000;cursor:pointer;">
+                    REESSAYER
+                </button>`;
+            document.body.appendChild(el);
+        }
+
         function getCameraErrorMessage(err) {
             if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                return 'Permission refusée. Va dans les réglages de ton navigateur et autorise l\'accès à la caméra pour ce site.';
+                return 'Permission refusee. Va dans les reglages de ton navigateur et autorise l\'acces a la camera pour ce site.';
             } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-                return 'Aucune caméra détectée sur cet appareil.';
+                return 'Aucune camera detectee sur cet appareil.';
             } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-                return 'La caméra est déjà utilisée par une autre application. Ferme-la et réessaie.';
+                return 'La camera est deja utilisee par une autre application. Ferme-la et reessaie.';
             } else if (err.name === 'OverconstrainedError') {
-                return 'La caméra demandée n\'est pas disponible. Essaie de changer de caméra.';
+                return 'La camera demandee n\'est pas disponible. Essaie de changer de camera.';
             }
-            return 'Impossible d\'accéder à la caméra : ' + (err.message || err.name);
+            return 'Impossible d\'acceder a la camera : ' + (err.message || err.name);
+        }
+
+        // Fallback manuel getUserMedia si MediaPipe Camera echoue (v2.4 robuste Z Fold 6)
+        async function startCameraFallback() {
+            try {
+                const constraints = {
+                    video: {
+                        facingMode: { ideal: currentFacingMode },
+                        width:  { ideal: camWidth },
+                        height: { ideal: camHeight }
+                    }
+                };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                await video.play();
+
+                const loop = async () => {
+                    if (video.readyState >= 2) {
+                        await pose.send({ image: video });
+                    }
+                    requestAnimationFrame(loop);
+                };
+                requestAnimationFrame(loop);
+                console.log('Combat.AI v2.4 — fallback getUserMedia OK');
+            } catch (err2) {
+                console.error('Fallback camera error:', err2);
+                showCameraError(
+                    'Impossible d\'acceder a la camera.<br><br>' +
+                    'Verifie les permissions camera dans Chrome<br>' +
+                    '(icone verrou → Camera → Autoriser) puis recharge.'
+                );
+            }
+        }
+
+        // Verifie HTTPS (obligatoire pour getUserMedia hors localhost)
+        const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (!isSecure) {
+            showCameraError(
+                'La camera necessite <strong>HTTPS</strong>.<br><br>' +
+                'Ouvre l\'application via un lien <strong>https://</strong> ' +
+                'ou depuis GitHub Pages.'
+            );
         }
 
         function startCamera(facingMode) {
+            if (!isSecure) return;
             if (camera) camera.stop();
             cameraError.style.display = 'none';
             const config = {
@@ -2042,17 +2108,18 @@
             };
             camera = new Camera(video, config);
             camera.start().then(() => {
-                console.log(`Combat.AI ready (${isMobile ? 'mobile' : 'desktop'} ${camWidth}x${camHeight} facingMode=${facingMode})`);
+                console.log(`Combat.AI v2.4 ready (${isMobile ? 'mobile' : 'desktop'} ${camWidth}x${camHeight} facingMode=${facingMode})`);
                 cameraError.style.display = 'none';
             }).catch(err => {
-                console.error('Camera error:', err);
-                // Si facingMode 'user' échoue, on réessaie sans contrainte
+                console.warn('MediaPipe Camera failed:', err);
+                // Si facingMode specifique echoue, on reessaie sans contrainte
                 if (facingMode !== null) {
                     console.log('Retrying camera without facingMode constraint...');
                     startCamera(null);
                 } else {
-                    cameraErrorMsg.textContent = getCameraErrorMessage(err);
-                    cameraError.style.display = 'block';
+                    // Dernier recours : fallback getUserMedia direct (v2.4 Z Fold 6)
+                    console.log('Trying getUserMedia fallback...');
+                    startCameraFallback();
                 }
             });
         }
@@ -2061,7 +2128,9 @@
             startCamera(currentFacingMode);
         });
 
-        startCamera(currentFacingMode);
+        if (isSecure) {
+            startCamera(currentFacingMode);
+        }
 
         // Toggle camera front/rear (mobile)
         document.getElementById('btn-camera-toggle').addEventListener('click', () => {
@@ -2072,13 +2141,13 @@
         // ===== SERVICE WORKER (PWA) =====
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(() => {});
-            // Rechargement automatique quand un nouveau SW prend le contrôle
-            // (nouvelle version deployée → l'ancienne page en cache est remplacée)
+            // Rechargement automatique quand un nouveau SW prend le controle
+            // (nouvelle version deployee -> l'ancienne page en cache est remplacee)
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 window.location.reload();
             });
         }
-    
+
         // ===== ENREGISTREMENT VIDEO SESSION =====
         let mediaRecorder = null;
         let recordedChunks = [];
