@@ -215,6 +215,13 @@
             font-size: 18px;
         }
 
+        .demo-video-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
         .demo-play-btn {
             width: 80px;
             height: 80px;
@@ -551,8 +558,15 @@
     <!-- DEMO -->
     <section class="demo-section" id="demo">
         <div class="demo-container">
-            <div class="demo-placeholder">Aper&ccedil;u vid&eacute;o de Combat.AI</div>
-            <div class="demo-play-btn" onclick="window.location.href='combat-ai-v2.html'"></div>
+            <!-- VIDEO ICI : remplacer YOUTUBE_VIDEO_ID par l'ID de la video YouTube -->
+            <!-- Exemple : si l'URL est https://youtu.be/dQw4w9WgXcQ -> ID = dQw4w9WgXcQ -->
+            <iframe
+                class="demo-video-frame"
+                src="https://www.youtube.com/embed/YOUTUBE_VIDEO_ID?rel=0&modestbranding=1"
+                title="Combat.AI - Demo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
         </div>
     </section>
 
