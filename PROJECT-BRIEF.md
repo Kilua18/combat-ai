@@ -1,292 +1,244 @@
-# PROJECT-BRIEF.md - Combat.AI
-
-> **Ce fichier sert de contexte pour toute IA (Claude Code, Grok, Gemini, etc.) travaillant sur ce projet.**
-> Derniere mise a jour : 28 Fevrier 2026
+# PROJECT-BRIEF.md â Combat.AI
+> Contexte universel pour toute IA (Claude Code, Grok, Geminiâ¦) travaillant sur ce projet.
+> **DerniÃ¨re mise Ã  jour : 28 FÃ©vrier 2026 â v2.4**
 
 ---
 
 ## 1. VISION PRODUIT
 
-Combat.AI est un coach de boxe IA en temps reel qui fonctionne 100% dans le navigateur.
-Le systeme utilise MediaPipe Pose pour tracker le squelette du corps via webcam/camera telephone,
-puis analyse chaque mouvement pour detecter et scorer des coups de boxe (jab, cross, crochet, uppercut).
+Combat.AI est un coach de boxe IA en temps rÃ©el, 100% navigateur.
+MediaPipe Pose (webcam) â dÃ©tection squelette â analyse coups â scoring.
 
-**Cible** : Combattants amateurs/pro, coach de boxe, fitness.
-**Modele** : Freemium — Gratuit (5 modules) / Premium 9,90EUR/mois / Pro Coach 20EUR/mois.
-
-**Stack** : HTML/CSS/JS pur + MediaPipe Pose (CDN). Zero backend sauf Cloudflare Worker pour la waitlist.
-
-**Plateforme principale** : **Telephone mobile** (le PC du dev est trop lent pour MediaPipe).
-Sur mobile : `modelComplexity: 0` (leger), resolution 640x480.
-Sur desktop : `modelComplexity: 1` (moyen), resolution 1280x720.
-
-**Deploiement** : GitHub Pages — https://kilua18.github.io/combat-ai/
+**Cible** : Combattants amateurs/pro, coaches, fitness. SaaS Ã  20 EUR/mois.
+**Stack** : HTML/CSS/JS pur + MediaPipe Pose (CDN). ZÃ©ro backend, zÃ©ro installation.
+**CrÃ©ateur** : Norman â pro fighter + dev (lancÃ© 26 DÃ©c 2025).
 
 ---
 
-## 2. ARCHITECTURE DES FICHIERS
+## 2. FICHIERS DU PROJET
 
-| Fichier | Role | Lignes |
+| Fichier | RÃ´le | Statut |
 |---------|------|--------|
-| `index.html` | Landing page marketing (SEO, pricing, waitlist, video demo) | ~379 |
-| `combat-ai-v2.html` | **VERSION ACTIVE** - Moteur de detection + enregistrement video | ~2165 |
-| `dashboard.html` | Dashboard analytics (sessions exportees) | ~770 |
-| `emails.html` | Dashboard email Brevo (contacts, campagnes, welcome email) | ~344 |
-| `sw.js` | Service Worker PWA (cache = `combat-ai-v3`) | ~49 |
-| `manifest.json` | PWA manifest (fullscreen, portrait, icon SVG) | ~18 |
-| `icon.svg` | Icone PWA "CAI" verte | - |
-| `export-excel.py` | Script Python pour convertir JSON sessions en Excel | - |
-| `show-stats.py` | Script Python pour afficher stats sessions en CLI | - |
-| `monitor.py` | Script Python monitoring | ~283 |
-| `metrics-launch.md` | Template de suivi des metriques de lancement | ~184 |
-
-**Le fichier principal est `combat-ai-v2.html`** - tout le moteur de detection est dedans.
+| `combat-ai-v2.html` | **VERSION ACTIVE** â moteur complet v2.4 | â actif |
+| `combat-ai-v1.html` | Premier POC detection basique | ð¦ archive |
+| `index.html` | Landing page marketing + waitlist | â actif |
+| `dashboard.html` | Analytics sessions exportÃ©es JSON | â actif |
+| `show-stats.py` | Script Python affichage stats session | â actif |
+| `monitor.py` | Monitoring Python | â actif |
+| `export-excel.py` | Export Excel sessions (vide â Ã  faire) | â¬ vide |
+| `metrics-launch.md` | Template suivi mÃ©triques lancement | â actif |
+| `metrics-log.json` | DonnÃ©es mÃ©triques | â actif |
+| `PROJECT-BRIEF.md` | Ce fichier â contexte projet | â actif |
 
 ---
 
-## 3. INFRASTRUCTURE & SERVICES
+## 3. HISTORIQUE DES SESSIONS DE TEST
 
-### Waitlist (index.html)
-- **Frontend** : formulaire email dans `index.html` section waitlist
-- **Backend** : Cloudflare Worker (`https://combat-ai-waitlist.kkamagra18.workers.dev`)
-- **CRM** : Brevo (ex-Sendinblue) — collecte les emails, envoie les campagnes
-- **Flow** : `index.html` → POST Cloudflare Worker → Brevo API v3
-
-### Email Dashboard (emails.html)
-- Page d'admin locale pour voir les contacts Brevo, envoyer des campagnes, gerer le welcome email
-- Utilise l'API Brevo directement
-
-### PWA (sw.js + manifest.json)
-- Service Worker cache `combat-ai-v2.html`, `manifest.json`, `icon.svg`
-- Strategie : cache-first pour l'app shell, network-only pour CDN (MediaPipe, Google Fonts)
-- `CACHE_NAME = 'combat-ai-v3'` — bumper pour forcer MAJ sur les telephones
-- Auto-reload via `controllerchange` listener dans combat-ai-v2.html
+| Date | Version | DurÃ©e | Coups | Notes |
+|------|---------|-------|-------|-------|
+| 2026-02-17 | v2.0 | 325s | 201 | Assis â 100% faux positifs, bug checkStanding |
+| 2026-02-17 | v2.0 | 69s | 4 | Debout, premiÃ¨re vraie session |
+| 2026-02-20 #1 | v2.1 | 76s | 3 | 0s bloquÃ© au dÃ©part |
+| 2026-02-20 #2 | v2.2 | 69s | 5 | 36s bloquÃ© (checkStanding trop strict) |
+| 2026-02-20 #3 | v2.3 | 188s | 12 | 25s bloquÃ© (encore checkStanding) |
+| Prochaine | v2.4 | â | ? | Objectif : 0s bloquÃ©, comptage rÃ©aliste |
 
 ---
 
-## 4. LANDING PAGE (index.html)
+## 4. ÃTAT ACTUEL â v2.4 (28 FÃ©v 2026)
 
-### Sections
-1. **Nav** : Logo, liens (Features, Tarifs, Techniques, Comment ca marche, Demo live, Rejoindre)
-2. **Hero** : Badge "BETA - ACCES ANTICIPE", titre, CTA (Essayer la demo + Rejoindre la waitlist)
-3. **Demo** : Video `demo.mp4` en autoplay loop muted + bouton "Essayer en live"
-4. **Features** : 6 cartes (Vision IA, Temps reel, 4 techniques, Score & combo, Defense, Export)
-5. **Techniques** : 4 items (Jab, Cross, Crochet, Uppercut) avec emojis
-6. **How it works** : 3 etapes (Ouvre ton navigateur, Lance un round, Progresse)
-7. **Pricing** : 3 tiers (Gratuit 0EUR, Premium 9,90EUR/mois POPULAIRE, Pro Coach 20EUR/mois)
-8. **Waitlist** : Formulaire email → Cloudflare Worker → Brevo
-9. **Footer** : "Built by Norman — Combat.AI 2026"
+### Ce qui fonctionne â
+- UI complÃ¨te : start screen, HUD, timer, rounds, end screen, export JSON
+- MediaPipe Pose : squelette 33 landmarks, 30 fps
+- Machine Ã  Ã©tats par bras (IDLE â EXTENDING â RETRACTING)
+- Classification 4 techniques : JAB, CROSS, CROCHET, UPPERCUT
+- Scoring rÃ©aliste (extension + vitesse + base)
+- Mode Libre + Mode Combo (10 sÃ©quences)
+- Pause/Resume, multi-rounds, repos entre rounds
+- Audio : cloche boxe synthÃ©tique (Web Audio API)
+- Export session JSON
+- Dashboard analytics (`dashboard.html`)
+- Debug overlay (touche D) : hipY / torso / kneeVis / standing / defFrames
 
-### Pricing tiers
-| Tier | Prix | Features |
-|------|------|----------|
-| Gratuit | 0EUR | 5 modules, detection 4 coups, score temps reel |
-| Premium | 9,90EUR/mois | + historique illimite, export JSON, detection garde, nouvelles techniques |
-| Pro Coach | 20EUR/mois | + dashboard multi-athletes, rapports progression, acces API, support prioritaire |
+### Corrections v2.4 appliquÃ©es â (session 20 FÃ©v 2026)
+| # | Fix | Avant | AprÃ¨s |
+|---|-----|-------|-------|
+| 1 | MIN_MOTION_FRAMES | 2 | 1 |
+| 2 | STANDING_THRESHOLD (torso) | 0.15 | 0.08 |
+| 3 | checkStanding kneeVisibility | > 0.5 | > 0.3 |
+| 4 | checkStanding legLength | > 0.10 | > 0.05 |
+| 5 | checkStanding hipY | > 0.70 | > 0.50 |
+| 6 | checkStanding mode | bloque dÃ©tection | indicateur visuel seulement |
+| 7 | classifyTechnique fallback | return null | return JAB/CROSS |
+| 8 | detectDefense dÃ©lai | instantanÃ© | 12 frames (~0.4s) |
+| 9 | Debug overlay | absent | touche D |
 
----
-
-## 5. PIPELINE DE DETECTION (combat-ai-v2.html)
-
-### 5.1 Flux complet frame-par-frame
-
-```
-Camera (30fps) -> MediaPipe Pose (33 landmarks)
-    -> onResults() [L1444] : dessine squelette
-    -> analyzeMovement() [L1572] : pipeline principal
-        1. checkStanding()     [L1514] -- GARDE : si assis, return early
-        2. detectDefense()     [L1765] -- garde haute (2 mains pres du visage, tenue 12 frames)
-        3. Position history    [~L1594] -- stocke 5 derniers frames par bras
-        4. smoothPosition()    [L1479] -- lissage 3-frames pondere [0.2, 0.3, 0.5]
-        5. Calcul vitesse      [~L1612] -- compare frame N vs frame N-3
-        6. Filtre artefacts    [~L1630] -- speed > MAX_REALISTIC_SPEED (0.35) = ignore
-        7. Calcul extension    [~L1634] -- distance horizontale poignet-epaule + angle coude
-        8. processArm() x2     [L1658] -- machine a etats par bras
-        9. MAJ HUD             [~L1649] -- affichage temps reel
-```
-
-### 5.2 Machine a etats par bras (processArm)
-
-```
-IDLE -> speed > speedMin -> EXTENDING
-EXTENDING -> tracking peaks (vitesse, extension) -> vitesse ralentit -> RETRACTING
-RETRACTING -> validation 4 criteres:
-    - validSpeed:     peakSpeed >= speedMin * 1.5
-    - validExtension: peakExt >= extensionMin * 0.7
-    - validFrames:    frames >= MIN_MOTION_FRAMES (1)
-    - validCooldown:  now - lastPunchTime > config.cooldown
-    -> Si 4/4 valides: classifyTechnique() -> registerPunch()
-    -> Reset a IDLE
-```
-
-### 5.3 Classification des techniques (classifyTechnique)
-
-| Technique | Conditions | Seuils |
-|-----------|-----------|--------|
-| UPPERCUT G/D | mouvement vertical (nDirY < -0.6) + coude plie | elbowAngle < 115 |
-| CROCHET G/D | mouvement lateral (abs(nDirX) > 0.6) + coude plie | 60 < elbowAngle < 135 |
-| JAB | bras gauche, extension large, bras tendu | extH >= extensionMin, elbowAngle > 125 |
-| CROSS | bras droit, extension large, bras tendu | extH >= extensionMin, elbowAngle > 125 |
-| Fallback JAB/CROSS | extension moyenne | extH >= extensionMin * 0.6, elbowAngle > 100 |
-| Fallback large | extension faible | extH >= extensionMin * 0.4 OU elbowAngle > 90 |
-
-**Note** : Droitier suppose par defaut (bras gauche = JAB, bras droit = CROSS).
-
-### 5.4 Scoring (registerPunch)
-
-```
-extNorm = clamp((extension - 0.10) / 0.30, 0, 1)   // 0.10->0%, 0.40->100%
-spdNorm = clamp((speedMs - 1) / 10, 0, 1)            // 1 m/s->0%, 11 m/s->100%
-score = round(extNorm*100*0.4 + spdNorm*100*0.4 + 20) // 40% ext + 40% speed + 20% base
-finalScore = min(score, 100)
-```
-
-Force estimee : `speedMs * 0.7 + (extension * 10) * 0.3`
-- FAIBLE < 3 | MOYEN 3-6 | FORT 6-9 | DEVASTATEUR 9+
-
-### 5.5 Enregistrement video de session (NOUVEAU - 28 Fev 2026)
-
-- Enregistre automatiquement la video de la camera pendant la session (MediaRecorder API)
-- Preference : MP4 h264 > WebM VP9 > WebM (selon support navigateur)
-- Bitrate : 2.5 Mbps, chunks de 1s
-- A la fin de session : lecteur replay avec boutons Telecharger + Rejouer
-- Section `#replay-section` visible apres fin de session
+### ProblÃ¨mes ouverts â ï¸
+| PrioritÃ© | ProblÃ¨me | Impact |
+|----------|---------|--------|
+| ð´ P0 | CamÃ©ra ne s'active pas sur Z Fold 6 | Inutilisable mobile |
+| ð´ P0 | AccÃ¨s hors WiFi impossible | Inutilisable hors domicile |
+| ð¡ P1 | v2.4 pas encore testÃ©e debout en live | RÃ©sultats inconnus |
+| ð¡ P1 | Classification CROCHET peu fiable | Confusion avec JAB |
+| ð  P2 | Pas de persistance sessions (localStorage) | UX |
+| ð  P2 | Pas de PWA (installable) | Mobile UX |
+| ð  P2 | export-excel.py vide | Export Excel non dispo |
 
 ---
 
-## 6. CONSTANTES & CONFIGURATION
+## 5. PIPELINE DE DÃTECTION â combat-ai-v2.html
 
-### CONFIG par difficulte
+### 5.1 Flux par frame
+
+```
+Camera 30fps â MediaPipe Pose (33 landmarks)
+  â onResults()
+      â dessine squelette
+      â analyzeMovement()
+          1. checkStanding()     â indicateur visuel (ne bloque plus)
+          2. detectDefense()     â garde haute si 12 frames consÃ©cutives
+          3. history push        â 5 derniÃ¨res positions poignets
+          4. smoothPosition()    â lissage 3-frames [0.2, 0.3, 0.5]
+          5. vitesse             â frame N vs frame N-2
+          6. filtre artefacts    â speed > 0.35 = ignore
+          7. extension + angle   â dist horizontale poignet-Ã©paule
+          8. processArm() x2    â machine Ã  Ã©tats
+          9. MAJ HUD
+```
+
+### 5.2 Machine Ã  Ã©tats (processArm)
+
+```
+IDLE â speed > speedMin â EXTENDING
+EXTENDING â track peaks (vitesse, extension) â ralenti â RETRACTING
+RETRACTING â validation:
+    peakSpeed >= speedMin * 1.5       (vitesse suffisante)
+    peakExt >= extensionMin * 0.7     (extension suffisante)
+    frames >= MIN_MOTION_FRAMES (1)   (au moins 1 frame)
+    now - lastPunchTime > cooldown    (pas trop rapprochÃ©)
+  â OK: classifyTechnique() â registerPunch()
+  â Reset IDLE
+```
+
+### 5.3 Classification techniques
+
+| Technique | Condition principale | Seuils |
+|-----------|---------------------|--------|
+| UPPERCUT | nDirY < -0.6 (haut) | elbowAngle < 115 |
+| CROCHET | abs(nDirX) > 0.6 (latÃ©ral) | 60 < elbowAngle < 135 |
+| JAB | bras gauche, tendu | extH >= extensionMin, elbowAngle > 125 |
+| CROSS | bras droit, tendu | extH >= extensionMin, elbowAngle > 125 |
+| Fallback | extension moyenne | extH >= extensionMin*0.6, elbowAngle > 100 |
+
+### 5.4 Scoring
+
+```
+extNorm = clamp((extension - 0.10) / 0.30, 0, 1)
+spdNorm = clamp((speedMs - 1) / 10, 0, 1)
+score   = round(extNorm*100*0.4 + spdNorm*100*0.4 + 20)   â cap 100
+
+Force = speedMs*0.7 + (extension*10)*0.3
+  < 3 = FAIBLE | 3-6 = MOYEN | 6-9 = FORT | 9+ = DEVASTATEUR
+```
+
+---
+
+## 6. CONSTANTES (combat-ai-v2.html ~L800)
+
+```javascript
+MAX_REALISTIC_SPEED = 0.35   // au-dessus = artefact tracking
+MIN_MOTION_FRAMES   = 1      // min frames pour valider un coup
+STANDING_THRESHOLD  = 0.08   // ratio torse min (hanches-Ã©paules)
+NORM_TO_METERS      = 2.0    // 1 unitÃ© normalisÃ©e â 2m rÃ©els
+SPEED_FRAME_GAP     = 3      // comparaison frame N vs N-3
+MAX_DISPLAY_SPEED   = 25     // cap affichage m/s
+```
+
+### CONFIG par difficultÃ©
 
 | Param | Easy | Normal | Hard |
 |-------|------|--------|------|
 | speedMin | 0.05 | 0.07 | 0.10 |
-| speedIdeal | 0.10 | 0.14 | 0.18 |
 | extensionMin | 0.18 | 0.24 | 0.30 |
 | cooldown (ms) | 500 | 400 | 300 |
 | comboWindow (ms) | 2500 | 2000 | 1500 |
 
-### Constantes globales
+---
 
-```
-MAX_REALISTIC_SPEED = 0.35   // Au-dessus = artefact tracking
-MIN_MOTION_FRAMES = 1        // Minimum frames pour valider un coup
-NORM_TO_METERS = 2.0         // 1 unite normalisee ~= 2 metres
-SPEED_FRAME_GAP = 3          // Compare frame N vs frame N-3
-MAX_DISPLAY_SPEED = 25       // Cap affichage vitesse a 25 m/s
-MAX_COMBO = 50               // Cap combo realiste
-MIN_PUNCH_INTERVAL = 200     // ms - 2 coups < 200ms = bruit (reset combo)
-DEFENSE_HOLD_REQUIRED = 12   // frames pour valider defense (~0.4s)
-```
+## 7. FONCTIONS CLÃS â RÃFÃRENCE RAPIDE
+
+| Fonction | RÃ´le |
+|----------|------|
+| `checkStanding(landmarks)` | DÃ©tecte posture debout â visuel seulement depuis v2.4 |
+| `analyzeMovement(landmarks)` | Pipeline principal, appelÃ© chaque frame |
+| `processArm(side, ...)` | Machine Ã  Ã©tats par bras |
+| `classifyTechnique(...)` | JAB / CROSS / CROCHET / UPPERCUT |
+| `registerPunch(...)` | Enregistrement + scoring + combo + HUD |
+| `detectDefense(...)` | Garde haute (12 frames) |
+| `normSpeedToMs(normSpeed)` | Vitesse normalisÃ©e â m/s affichage |
+| `smoothPosition(history)` | Lissage 3-frames pondÃ©rÃ© |
+| `startSession()` | Init session + timer + cloche |
+| `endSession()` | Fin + Ã©cran rÃ©sultats |
+| `exportSession()` | Export JSON tÃ©lÃ©chargeable |
+| `callNewCombo()` | Mode Combo â nouvelle sÃ©quence |
 
 ---
 
-## 7. ETAT ACTUEL DES BUGS
+## 8. UI / ÃCRANS
 
-### BUG #1 : checkStanding() -- RESOLU (v2.4)
-201 coups assis → corrige avec double critere genoux/hanches basses.
-
-### BUG #2 : normSpeedToMs() -- RESOLU (v2.2)
-229 m/s → corrige avec calibration + cap 25 m/s. Sessions reelles : 1-7 m/s.
-
-### BUG #3 : Combo counter infini -- RESOLU (v2.2)
-Combo 187 → cap 50 + reset si 2 coups < 200ms.
-
-### BUG #4 : best_speed export = string -- ACTIF (mineur)
-`Math.max(...state.speeds).toFixed(1)` retourne `"4.6"` (string) pas `4.6` (number).
-Fix : entourer de `parseFloat()`.
-
-### NOTE : Cache PWA telephone
-Le telephone peut avoir une ancienne version en cache (cles JSON francaises).
-Fix : bumper `CACHE_NAME` dans sw.js de `combat-ai-v3` a `combat-ai-v4`.
+| Ãcran | Contenu |
+|-------|---------|
+| Start Screen | DurÃ©e round (1/2/3 min), Rounds (1/3/5/12), Mode (Libre/Combo), SensibilitÃ© |
+| HUD | Technique, Vitesse (m/s), Extension (%), Force, Total coups, Posture, Timer, Combo |
+| Debug (D) | hipY, torso, kneeVis, standing, defFrames |
+| End Screen | Total coups, Score moyen, Max combo, Meilleure vitesse, Meilleur score, DÃ©fenses, Breakdown techniques, Export |
 
 ---
 
-## 8. SESSIONS DE TEST REELLES (26 Fevrier 2026 - Mobile)
+## 9. ROADMAP PRIORISÃE
 
-### Session 1 - Normale (87s)
-| Stat | Valeur |
-|------|--------|
-| Total coups | 10 |
-| Score moyen | 49/100 |
-| Meilleur score | 77/100 (CROCHET G, 7.0 m/s) |
-| Max combo | 3 |
-| Defenses | 2 |
+### ð´ P0 â Bloquant immÃ©diat
 
-### Session 2 - Facile (65s)
-| Stat | Valeur |
-|------|--------|
-| Total coups | 40 |
-| Score moyen | 41/100 |
-| Meilleur score | 72/100 (JAB, 4.0 m/s) |
-| Max combo | 13 |
-| Defenses | 0 |
+- [ ] **Fix camÃ©ra Z Fold 6** : fallback `getUserMedia` direct + erreur visible Ã  l'Ã©cran
+- [ ] **AccÃ¨s hors WiFi** : dÃ©ploiement HTTPS public (localtunnel ou hÃ©bergement statique)
 
-**Conclusion** : Moteur fonctionnel sur mobile. Vitesses 1-7 m/s = realiste.
+### ð¡ P1 â Prochaine session de test
 
----
+- [ ] **Test v2.4 en conditions rÃ©elles** : vÃ©rifier que 0s bloquÃ© au dÃ©part, coups dÃ©tectÃ©s dÃ¨s le dÃ©but
+- [ ] **Calibrer MODE FACILE** : speedMin 0.05 peut encore gÃ©nÃ©rer du bruit de fond
+- [ ] **AmÃ©liorer CROCHET** : souvent confondu avec JAB (mÃªme cÃ´tÃ© gauche)
+- [ ] **Vitesse affichÃ©e** : vÃ©rifier que les m/s sont rÃ©alistes sur le Z Fold (fps diffÃ©rent)
 
-## 9. HISTORIQUE DES COMMITS (resume)
+### ð  P2 â Features
 
-| Date | Commit | Description |
-|------|--------|-------------|
-| 28 Fev | `921fdd8` | Enregistrement video de session + lecteur replay |
-| 28 Fev | `4f1e611` | Section pricing 3 tiers + video player demo.mp4 |
-| 28 Fev | `c315759` | Cloudflare Worker proxy pour waitlist (remplace appel direct Brevo) |
-| 27 Fev | `f47109b` | emails.html — dashboard Brevo (contacts, campagnes, welcome email) |
-| 26 Fev | `78fad1c` | Waitlist form connecte a Brevo API |
-| 26 Fev | `1847ad3` | Mise a jour PROJECT-BRIEF.md |
-| 25 Fev | `28143e5` | Auto-reload page quand nouveau SW |
-| 25 Fev | `26b2d61` | Bump cache SW v3 |
-| 25 Fev | `00ab593` | Fix isMobile ReferenceError (crash total) |
-| 24 Fev | `247ae88` | PWA + mobile responsive |
-| 20 Fev | `f953be3` | Fix sous-detection, classifyTechnique fallback |
-| 20 Fev | `affc1a5` | Fix checkStanding trop strict |
-| 17 Fev | `0c7d2f1` | Fix checkStanding + normSpeedToMs + combo cap |
-| 17 Fev | `d78466e` | Combat.AI v2 - premier commit MediaPipe |
+- [ ] **PWA** : manifest.json + service worker â installable sur Ã©cran d'accueil Z Fold
+- [ ] **Persistance sessions** : localStorage â historique des 10 derniÃ¨res sessions sans export
+- [ ] **export-excel.py** : script Python pour convertir JSON â Excel (actuellement vide)
+- [ ] **Mode calibration** : demander Ã  l'utilisateur de faire 3 jabs pour auto-calibrer les seuils
+- [ ] **Sounds on punch** : son d'impact Ã  chaque coup dÃ©tectÃ© (Web Audio)
+
+### ð¢ P3 â Vision long terme
+
+- [ ] DÃ©tection kicks (jambes) â MediaPipe Pose a les landmarks chevilles
+- [ ] Multi-utilisateur (coaching Ã  distance)
+- [ ] IntÃ©gration sac de frappe connectÃ© (BLE)
+- [ ] Backend pour persistence + leaderboard (Supabase ou Firebase)
 
 ---
 
-## 10. ROADMAP
+## 10. LANCEMENT (26 DÃ©c 2025)
 
-### RESOLU
-- [x] checkStanding() trop permissif (BUG #1)
-- [x] normSpeedToMs() vitesses irrealistes (BUG #2)
-- [x] Combo counter sans cap (BUG #3)
-- [x] PWA + mobile responsive
-- [x] Gestion erreur camera
-- [x] Auto-reload nouveau SW
-- [x] Landing page avec pricing
-- [x] Waitlist Brevo via Cloudflare Worker
-- [x] Dashboard email (emails.html)
-- [x] Enregistrement video de session + replay
-- [x] Video demo sur landing page
+PostÃ© sur : Instagram, Twitter/X, Reddit (r/MMA, r/MachineLearning, r/SideProject), LinkedIn.
+Voir `metrics-launch.md` pour les URLs et le template de suivi.
 
-### P0 - A faire (mineur)
-- [ ] Fix best_speed export string -> number
-- [ ] Bump CACHE_NAME -> 'combat-ai-v4' pour forcer MAJ telephones
-
-### P1 - Important
-- [ ] Support gaucher
-- [ ] Detection defense plus sensible
-- [ ] Historique sessions en localStorage
-
-### P2 - Monetisation
-- [ ] Stripe Checkout integration (paywall Premium/Pro)
-- [ ] Limiter features gratuites (5 modules, pas d'export, pas d'historique)
-- [ ] Dashboard coach multi-athletes
-
-### P3 - Nice to have
-- [ ] Sons/vibrations sur detection
-- [ ] Mode calibration
-- [ ] Graphiques dashboard
-- [ ] Rapports de progression PDF
+**Waitlist** : Google Form â objectif SaaS 20 EUR/mois.
 
 ---
 
-## 11. DEPENDENCIES EXTERNES
+## 11. DÃPENDANCES EXTERNES
 
 ```html
+<!-- CDN MediaPipe (pas de npm, pas de bundler) -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js">
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js">
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js">
@@ -294,16 +246,30 @@ Fix : bumper `CACHE_NAME` dans sw.js de `combat-ai-v3` a `combat-ai-v4`.
 ```
 
 MediaPipe Pose config :
-- `modelComplexity: 0` sur mobile, `1` sur desktop
+- `modelComplexity: 1` (medium â bon Ã©quilibre perf/prÃ©cision)
 - `smoothLandmarks: true`
 - `minDetectionConfidence: 0.5`
 - `minTrackingConfidence: 0.5`
 
-Services externes :
-- **Brevo** (CRM email) via Cloudflare Worker proxy
-- **GitHub Pages** (hebergement)
-- **Google Fonts** (Orbitron, Inter, Rajdhani)
+---
+
+## 12. DÃMARRAGE RAPIDE
+
+```bash
+# Desktop â double-clic sur combat-ai-v2.html
+
+# Serveur local HTTPS (requis pour camÃ©ra mobile sur rÃ©seau local)
+cd /tmp
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 7 -nodes \
+  -subj "/CN=combat-ai" 2>/dev/null
+python3 /tmp/serve_combat.py &
+# â https://[TON_IP]:8443/combat-ai-v2.html
+
+# Tunnel public HTTPS (accÃ¨s hors WiFi)
+npx localtunnel --port 8080
+# â https://xxx.loca.lt/combat-ai-v2.html
+```
 
 ---
 
-*Genere par Claude Code - 28 Fevrier 2026*
+*GÃ©nÃ©rÃ© par Claude Code â 28 FÃ©vrier 2026*
